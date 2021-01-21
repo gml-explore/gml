@@ -22,7 +22,7 @@ This class currently provides the following methods：
 
    >Function：In the sentiment analysis problem, it is necessary to construct a factor graph containing unary factors and binary factors, and this function is called at this time.  
    >Parameters：  
-   > · var_id_list - the set of k latent variable ids
+   > · var_id - the id of latent variable
 
 3. select_evidence_by_custom(var_id)[[source]](../evidence_select.py)
 

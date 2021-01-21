@@ -270,6 +270,8 @@ class GML:
                 a = ns_learing.factorGraphs[0].weight[index]['a']
                 b = ns_learing.factorGraphs[0].weight[index]['b']
                 w['initialValue'] = theta * a*(x-b)
+            else:
+                w['initialValue'] = ns_learing.factorGraphs[0].poential_weight[index]
         # 因子图推理
         ns_inference = numbskull.NumbSkull(
             n_inference_epoch=self.learing_epoches,
@@ -382,6 +384,7 @@ class GML:
                 inferenced_variables_id.clear()
             m_list = self.select_top_m_by_es(self.top_m)
             k_list = self.select_top_k_by_entropy(m_list, self.top_k)
+            '''
             if self.evidence_select_method == 'interval':
                 #只要没有进行更新,就每次只推理新增的变量
                 add_list = [x for x in k_list if x not in inferenced_variables_id]
@@ -397,6 +400,18 @@ class GML:
             else:
                 self.inference_subgraph(k_list)
                 var = self.label(k_list)
+            '''
+            add_list = [x for x in k_list if x not in inferenced_variables_id]
+            if len(add_list) > 0:
+                for var_id in add_list:
+                    # if var_id not in inferenced_variables_id:
+                    self.inference_subgraph(var_id)
+                    # 每轮更新期间推理过的变量，因为参数没有更新，所以无需再进行推理。
+                    inferenced_variables_id.add(var_id)
+            var = self.label(k_list)
+            if self.evidence_select_method == 'interval':
+                gml_utils.write_labeled_var_to_evidence_interval(self.variables, self.features, var, self.support.evidence_interval)
+                self.update_bound(var)  # 每标记一个变量之后更新上下界
             labeled_var += 1
             labeled_count += 1
             logging.info("label_count=" + str(labeled_count))

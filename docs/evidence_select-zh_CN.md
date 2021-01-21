@@ -14,7 +14,7 @@
 
    >功能：在实体识别问题中，需要构建包含参数化的单因子的因子图，此时调用此函数。  
    >参数：  
-   > · var_id - k个变量id的列表  
+   > · var_id - 隐变量id  
    >返回值：connected_var_set, connected_edge_set, connected_feature_set  
    >返回类型：集合
 
@@ -22,7 +22,7 @@
 
    >功能：在情感分析问题中，需要构建包含单因子和双因子的因子图，此时调用此函数。  
    >参数：  
-   > · var_id_list - 隐变量id  
+   > · var_id - 隐变量id  
 
 3. select_evidence_by_custom(var_id)[[source]](../evidence_select.py)
 
