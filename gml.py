@@ -12,14 +12,14 @@ from evidence_select import EvidenceSelect
 from approximate_probability_estimation import ApproximateProbabilityEstimation
 from construct_subgraph import ConstructSubgraph
 from configparser import ConfigParser
-
+from concurrent.futures import ProcessPoolExecutor
 class GML:
     '''
     GML主类: Evidential Support -> Approximate Probability Estimation -> select topm -> select topk -> inference -> label
     '''
     def __init__(self, dataname,variables, features, evidential_support_method, approximate_probability_method,
                  evidence_select_method, construct_subgraph_method, learning_method,top_m=2000, top_k=10, update_proportion= -1,
-                 balance=False,optimization = False,optimization_threshold = 1e-6,learning_epoches = 1000,inference_epoches = 1000):
+                 balance=False,optimization = False,optimization_threshold = 1e-6,learning_epoches = 1000,inference_epoches = 1000,nprocess=1):
         '''
         GML主类参数初始化
         @param dataname:
@@ -80,6 +80,7 @@ class GML:
         self.subgraph = ConstructSubgraph(variables, features, balance)
         self.learing_epoches = learning_epoches
         self.inference_epoches = inference_epoches
+        self.nprocess = nprocess
         self.now = str(time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time())))
         #log
         logging.basicConfig(
@@ -297,6 +298,7 @@ class GML:
         elif type(var_id) == int:
             self.variables[var_id]['inferenced_probability'] = ns_inference.factorGraphs[0].marginals[var_map[var_id]]
         logging.info("inferenced probability recored")
+        return var_id,ns_inference.factorGraphs[0].marginals[var_map[var_id]]
 
     def label(self, var_id_list):
         '''
@@ -339,6 +341,7 @@ class GML:
         m_list = list()
         update_feature_set = set()  # 存储一轮更新期间证据支持发生变化的feature
         inferenced_variables_id = set()  #一轮更新期间已经建立过因子图并推理的隐变量
+        pool = ProcessPoolExecutor(self.nprocess)
         if self.update_proportion > 0:
             update_cache = int(self.update_proportion * len(self.poential_variables_set))  # 每推理update_cache个变量后需要重新计算evidential support
         self.evidential_support(self.poential_variables_set, None)
@@ -386,11 +389,22 @@ class GML:
                 #只要没有进行更新,就每次只推理新增的变量
                 add_list = [x for x in k_list if x not in inferenced_variables_id]
                 if len(add_list) > 0:
-                    for var_id in add_list:
-                        # if var_id not in inferenced_variables_id:
-                        self.inference_subgraph(var_id)
+                    if(self.nprocess ==1): 
+                        for var_id in add_list:
+                            # if var_id not in inferenced_variables_id:
+                            self.inference_subgraph(var_id)
+                            # 每轮更新期间推理过的变量，因为参数没有更新，所以无需再进行推理。
+                            inferenced_variables_id.add(var_id)
+                    else:
+                        futures = []
+                        for var_id in add_list:
+                            future = pool.submit(self.inference_subgraph,var_id)
+                            futures.append(future)
+                        #self.inference_subgraph(var_id)
                         # 每轮更新期间推理过的变量，因为参数没有更新，所以无需再进行推理。
-                        inferenced_variables_id.add(var_id)
+                            inferenced_variables_id.add(var_id)
+                        for ft in futures:
+                            self.variables[ft.result()[0]]['inferenced_probability'] = ft.result()[1]
                 var = self.label(k_list)
                 gml_utils.write_labeled_var_to_evidence_interval(self.variables, self.features, var, self.support.evidence_interval)
                 self.update_bound(var)   #每标记一个变量之后更新上下界

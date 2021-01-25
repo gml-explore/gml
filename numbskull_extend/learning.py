@@ -35,6 +35,9 @@ def learnthread(shardID, nshards, step, regularization, reg_param,
                            poential_weight,alpha_bound,tau_bound)
     else:      #需要平衡化
         sample_num = sample_list.shape[0]
+        start = (shardID * sample_num) // nshards
+        end = ((shardID + 1) * sample_num) // nshards
+        sample_num = sample_list.shape[0]
         for i in range(0,sample_num) :
             var_samp = sample_list[i]['vid']
             if variable[var_samp]["isEvidence"] == 4:
