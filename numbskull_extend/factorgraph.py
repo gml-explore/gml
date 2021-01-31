@@ -211,10 +211,12 @@ class FactorGraph(object):
                         self.var_value, self.var_value_evid,
                         self.weight_value, learn_non_evidence,
                         self.poential_weight,self.alpha_bound, self.tau_bound,
-                        self.sample_list,self.wmap,self.wfactor   #add by hxl
+                        self.sample_list,self.wmap,self.wfactor
                         )
+                #Stochastic gradient descent
                 if self.learning_method ==  "sgd":
                     run_pool(self.threadpool, self.threads, learnthread, args)
+                #Batch gradient descent
                 elif self.learning_method == "bgd":
                     run_pool(self.threadpool, self.threads, learnthread_bgd, args)
             self.learning_epoch_time = timer.interval

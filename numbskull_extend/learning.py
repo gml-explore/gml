@@ -11,12 +11,10 @@ from numbskull_extend.inference import draw_sample, eval_factor
 
 @jit(cache=True, nogil=True)
 def learnthread(shardID, nshards, step, regularization, reg_param,
-                truncation,var_copy, weight_copy, weight,
-                variable, factor, fmap,
-                vmap, factor_index, Z, fids,
-                var_value, var_value_evid,
-                weight_value, learn_non_evidence,
-                poential_weight,alpha_bound,tau_bound,sample_list=None,wmap=None,wfactor=None):
+                truncation,var_copy, weight_copy, weight,variable,
+                factor, fmap,vmap, factor_index, Z,
+                fids,var_value, var_value_evid,weight_value, learn_non_evidence,
+                poential_weight,alpha_bound,tau_bound,sample_list=None, wmap=None,wfactor=None):
     """TODO."""
     # Identify start and end variable
     nvar = variable.shape[0]
@@ -28,57 +26,53 @@ def learnthread(shardID, nshards, step, regularization, reg_param,
                 # This variable is not owned by this machine
                 continue
             sample_and_sgd(var_samp, step, regularization, reg_param, truncation,
-                           var_copy, weight_copy, weight, variable,
-                           factor, fmap, vmap,
-                           factor_index, Z[shardID], fids[shardID], var_value,
-                           var_value_evid, weight_value, learn_non_evidence,
-                           poential_weight,alpha_bound,tau_bound)
+                           var_copy, weight_copy, weight, variable,factor,
+                           fmap, vmap,factor_index, Z[shardID], fids[shardID],
+                           var_value,var_value_evid, weight_value, learn_non_evidence,poential_weight,
+                           alpha_bound,tau_bound)
     else:      #需要平衡化
         sample_num = sample_list.shape[0]
         start = (shardID * sample_num) // nshards
         end = ((shardID + 1) * sample_num) // nshards
-        sample_num = sample_list.shape[0]
         for i in range(0,sample_num) :
             var_samp = sample_list[i]['vid']
             if variable[var_samp]["isEvidence"] == 4:
                 # This variable is not owned by this machine
                 continue
             sample_and_sgd(var_samp, step, regularization, reg_param, truncation,
-                           var_copy, weight_copy, weight, variable,
-                           factor, fmap, vmap,factor_index, Z[shardID],
-                           fids[shardID], var_value,var_value_evid,
-                           weight_value, learn_non_evidence,
-                           poential_weight,alpha_bound,tau_bound)
+                           var_copy, weight_copy, weight, variable,factor,
+                           fmap, vmap,factor_index, Z[shardID],fids[shardID],
+                           var_value,var_value_evid,weight_value, learn_non_evidence,poential_weight,
+                           alpha_bound,tau_bound)
 
 
 @jit(cache=True, nogil=True)
 def learnthread_bgd(shardID, nshards, step, regularization, reg_param,
-                truncation,var_copy, weight_copy, weight,
-                variable, factor, fmap,
-                vmap, factor_index, Z, fids,
-                var_value, var_value_evid,
-                weight_value, learn_non_evidence,
-                poential_weight,alpha_bound,tau_bound,sample_list,wmap,wfactor):
-    for wid in range(0,len(weight)):
+                truncation,var_copy, weight_copy, weight,variable,
+                factor, fmap,vmap, factor_index, Z,
+                fids,var_value, var_value_evid,weight_value, learn_non_evidence,
+                poential_weight,alpha_bound,tau_bound,sample_list=None,wmap=None,wfactor=None):
+    nweight = weight.shape[0]
+    start = (shardID * nweight) // nshards
+    end = ((shardID + 1) * nweight) // nshards
+    for wid in range(start,end):
         if weight[wid]["isFixed"]:
             continue
         else:
             sample_and_bgd(wid,step, regularization, reg_param, truncation,
-                       var_copy, weight_copy, weight, variable,
-                       factor, fmap,vmap, factor_index, Z[shardID],
-                       fids[shardID], var_value, var_value_evid,
-                       weight_value, learn_non_evidence,
-                       alpha_bound,tau_bound,wmap,wfactor)
+                           var_copy, weight_copy, weight, variable,factor,
+                           fmap,vmap, factor_index, Z[shardID],fids[shardID],
+                           var_value, var_value_evid,weight_value, learn_non_evidence,poential_weight,
+                           alpha_bound,tau_bound,wmap,wfactor)
 
 
 @jit(nopython=True, cache=True, nogil=True)
 def sample_and_bgd(wid,step, regularization, reg_param, truncation,
-                   var_copy, weight_copy, weight, variable,
-                   factor, fmap,vmap, factor_index, Z,
-                   fids, var_value, var_value_evid,
-                   weight_value, learn_non_evidence,
+                   var_copy, weight_copy, weight, variable,factor,
+                   fmap,vmap, factor_index, Z,fids,
+                   var_value, var_value_evid,weight_value, learn_non_evidence,poential_weight,
                    alpha_bound,tau_bound,wmap,wfactor):    #批量梯度下降不需要考虑poential_weight
-    #1. 计算梯度和
+    #1.计算梯度和
     weight_id = wmap[wid]["weightId"]
     weight_index_offset = wmap[wid]["weight_index_offset"]
     weight_index_length = wmap[wid]["weight_index_length"]
@@ -88,10 +82,9 @@ def sample_and_bgd(wid,step, regularization, reg_param, truncation,
         factor_id = wfactor[fIndex]["factorId"]
         ftv_offset = factor[factor_id]["ftv_offset"]
         ftv_length = factor[factor_id]["arity"]
-
         var_count = ftv_length          #此因子拥有的变量个数
-        gradient_sum = 0  #不需要参数化时，所有梯度的和
-        gradient1_sum = 0 #需要参数化时，参数1的梯度和
+        gradient_sum = 0   #不需要参数化时，所有梯度的和
+        gradient1_sum = 0  #需要参数化时，参数1的梯度和
         gradient2_sum = 0  # 需要参数化时，参数2的梯度和
         # 找到每一个factor相关的每一个变量
         for vIndex in range(ftv_offset,ftv_offset+ftv_length):
@@ -106,7 +99,7 @@ def sample_and_bgd(wid,step, regularization, reg_param, truncation,
             else:
                 evidence = variable[var_samp]["initialValue"]
             var_value_evid[var_copy][var_samp] = evidence
-            # Sample the variabl e
+            # Sample the variable
             proposal = draw_sample(var_samp, var_copy, weight_copy, weight,
                                    variable, factor, fmap, vmap,
                                    factor_index, Z, var_value, weight_value)
@@ -193,6 +186,8 @@ def sample_and_bgd(wid,step, regularization, reg_param, truncation,
     # print("权重开始更新")
     weight_value[weight_copy][weight_id] = w
     weight[factor[factor_id]['weightId']]['initialValue'] = w
+    if variable[var_samp]["isEvidence"] != 1:
+        poential_weight[factor[factor_id]['weightId']] = w
 
 
 @jit(nopython=True, cache=True, nogil=True)
@@ -332,5 +327,3 @@ def sample_and_sgd(var_samp, step, regularization, reg_param, truncation,
         weight[factor[factor_id]['weightId']]['initialValue'] = w
         if variable[var_samp]["isEvidence"] != 1:
             poential_weight[factor[factor_id]['weightId']] = w
-
-
