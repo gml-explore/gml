@@ -300,37 +300,43 @@ class GML:
         logging.info("inferenced probability recored")
         return var_id,ns_inference.factorGraphs[0].marginals[var_map[var_id]]
 
-    def label(self, var_id_list):
+    def label(self, var_id_list,label_num=1):
         '''
         从topk个已推理变量中中选一个熵最小的进行标记
         @param var_id_list:
         @return:
         '''
         entropy_list = list()
-        if len(var_id_list) > 1:  # 如果传入的变量个数大于1,就每次选熵最小的进行标记
-            for var_id in var_id_list:
-                var_index = var_id
-                self.variables[var_index]['entropy'] = gml_utils.entropy(
-                    self.variables[var_index]['inferenced_probability'])
-                entropy_list.append([var_id, self.variables[var_index]['entropy']])
-            min_var = heapq.nsmallest(1, entropy_list, key=lambda x: x[1])  # 选出熵最小的变量
-            var = min_var[0][0]
+        for var_id in var_id_list:
+            var_index = var_id
+            self.variables[var_index]['entropy'] = gml_utils.entropy(
+                self.variables[var_index]['inferenced_probability'])
+            entropy_list.append([var_id, self.variables[var_index]['entropy']])
+        if len(var_id_list) > label_num:)
+            var = list()
+            min_var = heapq.nsmallest(label_num, entropy_list, key=lambda x: x[1]) # 选出熵最小的变量
+            for mv in min_var:
+                var.append(mv[0])
         else:
-            var = var_id_list[0]
-        var_index = var  # 如果传入的只有1个变量，直接进行标记即可
-        self.variables[var_index]['probability'] = self.variables[var_index]['inferenced_probability']
-        self.variables[var_index]['label'] = 1 if self.variables[var_index]['probability'] >= 0.5 else 0
-        self.variables[var_index]['is_evidence'] = True
-        logging.info('var-' + str(var) + " labeled succeed---------------------------------------------")
-        self.poential_variables_set.remove(var)
-        self.observed_variables_set.add(var)
-        self.labeled_variables_set.add(var)
-        probability = self.variables[var_index]['probability']
-        label = self.variables[var_index]['label']
-        true_label = self.variables[var_index]['true_label']
-        with open("./results/"+self.dataname+'-'+self.now+'-result.txt', 'a') as f:
-            f.write(f'{var:7} {probability:10} {label:4} {true_label:4}')
-            f.write('\n')
+            var = list()
+            var = var_id_list
+            # min_var = heapq.nsmallest(len(var_id_list), entropy_list, key=lambda x: x[1])
+            # for mv in min_var:
+            #     var.append(mv[0])
+        for var_index in var :
+            self.variables[var_index]['probability'] = self.variables[var_index]['inferenced_probability']
+            self.variables[var_index]['label'] = 1 if self.variables[var_index]['probability'] >= 0.5 else 0
+            self.variables[var_index]['is_evidence'] = True
+            logging.info('var-' + str(var) + " labeled succeed---------------------------------------------")
+            self.poential_variables_set.remove(var_index)
+            self.observed_variables_set.add(var_index)
+            self.labeled_variables_set.add(var_index)
+            probability = self.variables[var_index]['probability']
+            label = self.variables[var_index]['label']
+            true_label = self.variables[var_index]['true_label']
+            with open("./results/"+self.dataname+'-'+self.now+'-result.txt', 'a') as f:
+                f.write(f'{var_index:7} {probability:10} {label:4} {true_label:4}')
+                f.write('\n')
         return var
 
     def inference(self):
@@ -405,14 +411,15 @@ class GML:
                             inferenced_variables_id.add(var_id)
                         for ft in futures:
                             self.variables[ft.result()[0]]['inferenced_probability'] = ft.result()[1]
-                var = self.label(k_list)
-                gml_utils.write_labeled_var_to_evidence_interval(self.variables, self.features, var, self.support.evidence_interval)
-                self.update_bound(var)   #每标记一个变量之后更新上下界
+                label_var_index = self.label(k_list)
+                for var in label_var_index:
+                    gml_utils.write_labeled_var_to_evidence_interval(self.variables, self.features, var, self.support.evidence_interval)
+                    self.update_bound(var)   #每标记一个变量之后更新上下界
             else:
                 self.inference_subgraph(k_list)
                 var = self.label(k_list)
-            labeled_var += 1
-            labeled_count += 1
+            labeled_var += len(label_var_index)
+            labeled_count += len(label_var_index)
             logging.info("label_count=" + str(labeled_count))
         #output results
         self.score()
