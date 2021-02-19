@@ -87,11 +87,11 @@ class EvidentialSupport:
         self.word_evi_uncer_degree = 0.4
         self.relation_evi_uncer_degree = 0.1
         self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(self.variables)
+        self.evidence_interval = gml_utils.init_evidence_interval(self.evidence_interval_count)  #划分区间
+        gml_utils.init_evidence(self.features, self.evidence_interval, self.observed_variables_set) #如果此特征是参数化特征，就划分证据到不同区间
         #根据evidential support方法的不同，分别做不同的初始化
         if method == 'regression':
             self.data_matrix = self.create_csr_matrix()
-            self.evidence_interval = gml_utils.init_evidence_interval(self.evidence_interval_count)
-            gml_utils.init_evidence(self.features,self.evidence_interval,self.observed_variables_set)
             gml_utils.init_bound(self.variables,self.features)
         if method =='relation':
             self.dict_rel_acc = self.get_dict_rel_acc()

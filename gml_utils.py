@@ -50,21 +50,26 @@ def init_evidence_interval(evidence_interval_count):
 
 def init_evidence(features,evidence_interval,observed_variables_set):
     '''
-    初始化所有feature的evidence_interval属性和evidence_count属性
+    初始化参数化feature的evidence_interval属性和所有feature的evidence_count属性
     :return:
     '''
     for feature in features:
         evidence_count = 0
-        intervals = [set(), set(), set(), set(), set(), set(), set(), set(), set(), set()]
         weight = feature['weight']
-        feature['evidence_interval'] = intervals
-        for kv in weight.items():
-            if kv[0] in observed_variables_set:
-                for interval_index in range(0, len(evidence_interval)):
-                    if kv[1][1] >= evidence_interval[interval_index][0] and kv[1][1] < \
-                            evidence_interval[interval_index][1]:
-                        feature['evidence_interval'][interval_index].add(kv[0])
-                        evidence_count += 1
+        if feature['parameterize'] == 1:
+            intervals = [set(), set(), set(), set(), set(), set(), set(), set(), set(), set()]
+            feature['evidence_interval'] = intervals
+            for kv in weight.items():
+                if kv[0] in observed_variables_set:
+                    for interval_index in range(0, len(evidence_interval)):
+                        if kv[1][1] >= evidence_interval[interval_index][0] and kv[1][1] < \
+                                evidence_interval[interval_index][1]:
+                            feature['evidence_interval'][interval_index].add(kv[0])
+                            evidence_count += 1
+        elif feature['parameterize'] == 0:
+             for kv in weight.items():
+                 if kv[0] in observed_variables_set:
+                     evidence_count += 1
         feature['evidence_count'] = evidence_count
 
 def write_labeled_var_to_evidence_interval(variables,features,var_id,evidence_interval):

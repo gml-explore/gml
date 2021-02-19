@@ -28,7 +28,7 @@ class GML:
         features_keys = ['feature_id','feature_type','feature_name','weight']
         evidential_support_methods = ['regression','relation']
         approximate_probability_methods = ['interval','relation']
-        evidence_select_methods = ['interval','relation']
+        evidence_select_methods = ['interval','relation','general']
         construct_subgraph_methods= ['unaryPara','mixture']
         if evidential_support_method not in evidential_support_methods:
             raise ValueError('evidential_support_method has no this method: '+evidential_support_method)
@@ -362,6 +362,7 @@ class GML:
             self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(self.variables)
             self.evidential_support(self.poential_variables_set, None)
             self.approximate_probability_estimation(self.poential_variables_set)
+
         while len(self.poential_variables_set) > 0:
             # update_proportion小于等于0表示不需要更新evidential support
             if self.update_proportion <= 0:
@@ -454,7 +455,7 @@ class GML:
         print("--------------------------------------------")
         print("hards:")
         print("--------------------------------------------")
-        print("hards accuracy_score:" + str(metrics.accuracy_score(hards_true_label, hards_true_label)))
+        print("hards accuracy_score:" + str(metrics.accuracy_score(hards_true_label, hards_pred_label)))
         print("hards precision_score: " + str(metrics.precision_score(hards_true_label, hards_pred_label)))
         print("hards recall_score: " + str(metrics.recall_score(hards_true_label, hards_pred_label)))
         print("hards f1_score: " + str(metrics.f1_score(hards_true_label, hards_pred_label)))
