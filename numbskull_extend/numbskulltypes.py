@@ -10,7 +10,7 @@ Meta = np.dtype([('weights', np.int64),
 
 
 Weight = np.dtype([("isFixed", np.bool),
-                   ("parameterize",np.bool),    #此权重是否需要参数化
+                   ("parameterize",np.bool),    #此权重是否需要参数化,0,1
                    ("initialValue", np.float64),   #此权重的重要性？可以在计算梯度时按照重要性对权重进行缩放。
                    ("a", np.float64),
                    ("b", np.float64)])

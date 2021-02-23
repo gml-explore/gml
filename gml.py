@@ -29,7 +29,7 @@ class GML:
         evidential_support_methods = ['regression','relation']
         approximate_probability_methods = ['interval','relation']
         evidence_select_methods = ['interval','relation','general']
-        construct_subgraph_methods= ['unaryPara','mixture']
+        construct_subgraph_methods= ['unaryPara','mixture','general']
         if evidential_support_method not in evidential_support_methods:
             raise ValueError('evidential_support_method has no this method: '+evidential_support_method)
         if approximate_probability_method not in approximate_probability_methods:
@@ -216,9 +216,9 @@ class GML:
         @return:
         '''
         evidences = self.select_evidence(var_id)
-        method = 'self.subgraph.construct_subgraph_for_' + self.construct_subgraph_method + "(evidences)"
-        weight, variable, factor, fmap, domain_mask, edges_num, var_map,alpha_bound,tau_bound,weight_map,sample_list,wmap,wfactor = eval(method)
-        return weight, variable, factor, fmap, domain_mask, edges_num, var_map,alpha_bound,tau_bound,weight_map,sample_list,wmap,wfactor
+        method = 'self.subgraph.construct_subgraph_for_' + self.construct_subgraph_method + "(evidences,var_id)"
+        weight, variable, factor, fmap, domain_mask, edges_num, var_map,alpha_bound,tau_bound,weight_map_feature,sample_list,wmap,wfactor = eval(method)
+        return weight, variable, factor, fmap, domain_mask, edges_num, var_map,alpha_bound,tau_bound,weight_map_feature,sample_list,wmap,wfactor
 
     def inference_subgraph(self, var_id):
         '''
@@ -244,7 +244,7 @@ class GML:
             nthreads=1,
             learning_method = self.learning_method
         )
-        weight, variable, factor, fmap, domain_mask, edges_num, var_map,alpha_bound,tau_bound,weight_map,sample_list,wmap,wfactor = self.construct_subgraph(var_id)
+        weight, variable, factor, fmap, domain_mask, edges_num, var_map,alpha_bound,tau_bound,weight_map_feature,sample_list,wmap,wfactor = self.construct_subgraph(var_id)
         subgraph = weight, variable, factor, fmap, domain_mask, edges_num,alpha_bound,tau_bound,sample_list,wmap,wfactor
         ns_learing.loadFactorGraph(*subgraph)
         # 因子图参数学习
@@ -252,13 +252,14 @@ class GML:
         logging.info("subgraph learning finished")
         # 对学习到的参数进行范围控制,并将weight的isfixed属性置为true
         for index, w in enumerate(weight):
+            feature_id = weight_map_feature[index]
             w["isFixed"] = True
-            if self.evidence_select_method == 'interval':
-                theta = self.variables[var_id]['feature_set'][weight_map[index]][0]
-                x = self.variables[var_id]['feature_set'][weight_map[index]][1]
+            if self.features[feature_id]['parameterize'] == 1:
+                theta = self.variables[var_id]['feature_set'][feature_id][0]
+                x = self.variables[var_id]['feature_set'][feature_id][1]
                 a = ns_learing.factorGraphs[0].weight[index]['a']
                 b = ns_learing.factorGraphs[0].weight[index]['b']
-                w['initialValue'] = theta * a*(x-b)
+                w['initialValue'] = theta * a* (x - b)
             else:
                 w['initialValue'] = ns_learing.factorGraphs[0].poential_weight[index]
         # 因子图推理

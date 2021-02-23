@@ -137,7 +137,7 @@ def sample_and_bgd(wid,step, regularization, reg_param, truncation,
 
     #2.更新参数，分为需要参数化的和不需要参数化的
     #if need parameterize
-    if weight[factor[factor_id]['weightId']]['parameterize']:
+    if weight[factor[factor_id]['weightId']]['parameterize'] == 1:
             if regularization == 2:  # 是否需要正则化
                 a *= (1.0 / (1.0 + reg_param * step))
                 a -= step * gradient1_sum/factor_count
@@ -168,7 +168,7 @@ def sample_and_bgd(wid,step, regularization, reg_param, truncation,
             weight[factor[factor_id]['weightId']]['a'] = a
             weight[factor[factor_id]['weightId']]['b'] = b
     # if not need parameterize
-    else:
+    elif weight[factor[factor_id]['weightId']]['parameterize'] == 0:
         w = weight_value[weight_copy][weight_id]
         if regularization == 2:
             w *= (1.0 / (1.0 + reg_param * step))
@@ -183,7 +183,6 @@ def sample_and_bgd(wid,step, regularization, reg_param, truncation,
                 w = max(0, w - l1delta) if w > 0 else min(0, w + l1delta)
         else:
             w -= step * gradient_sum /factor_count
-    # print("权重开始更新")
     weight_value[weight_copy][weight_id] = w
     weight[factor[factor_id]['weightId']]['initialValue'] = w
     if variable[var_samp]["isEvidence"] != 1:
@@ -267,7 +266,7 @@ def sample_and_sgd(var_samp, step, regularization, reg_param, truncation,
                          variable, factor, fmap,
                          var_value)
         #if need parameterize
-        if weight[factor[factor_id]['weightId']]['parameterize']:
+        if weight[factor[factor_id]['weightId']]['parameterize'] == 1:
             x = fmap[factor[factor_id]["ftv_offset"]]['x']
             theta = fmap[factor[factor_id]["ftv_offset"]]['theta']
             a = weight[factor[factor_id]['weightId']]['a']
@@ -306,7 +305,7 @@ def sample_and_sgd(var_samp, step, regularization, reg_param, truncation,
             weight[factor[factor_id]['weightId']]['a'] = a
             weight[factor[factor_id]['weightId']]['b'] = b
         #如果不需要参数化
-        else:
+        elif weight[factor[factor_id]['weightId']]['parameterize'] == 0:
             gradient = (p1 - p0) * factor[factor_id]["featureValue"]
         # Update weight
             w = weight_value[weight_copy][weight_id]
