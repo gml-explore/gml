@@ -56,16 +56,17 @@ def init_evidence(features,evidence_interval,observed_variables_set):
     for feature in features:
         evidence_count = 0
         intervals = [set(), set(), set(), set(), set(), set(), set(), set(), set(), set()]
-        weight = feature['weight']
-        feature['evidence_interval'] = intervals
-        for kv in weight.items():
-            if kv[0] in observed_variables_set:
-                for interval_index in range(0, len(evidence_interval)):
-                    if kv[1][1] >= evidence_interval[interval_index][0] and kv[1][1] < \
-                            evidence_interval[interval_index][1]:
-                        feature['evidence_interval'][interval_index].add(kv[0])
-                        evidence_count += 1
-        feature['evidence_count'] = evidence_count
+        if feature['parameterize'] == 1:
+            weight = feature['weight']
+            feature['evidence_interval'] = intervals
+            for kv in weight.items():
+                if kv[0] in observed_variables_set:
+                    for interval_index in range(0, len(evidence_interval)):
+                        if kv[1][1] >= evidence_interval[interval_index][0] and kv[1][1] < \
+                                evidence_interval[interval_index][1]:
+                            feature['evidence_interval'][interval_index].add(kv[0])
+                            evidence_count += 1
+            feature['evidence_count'] = evidence_count
 
 def write_labeled_var_to_evidence_interval(variables,features,var_id,evidence_interval):
     '''
@@ -90,28 +91,29 @@ def init_bound(variables,features):
     @return:
     '''
     for feature in features:
-        feature_evidence0_count = 0
-        feature_evidence1_count = 0
-        feature_evidence0_sum = 0
-        feature_evidence1_sum = 0
-        for vid in feature['weight'].keys():
-            if variables[vid]['is_evidence'] == True:
-                if variables[vid]['label'] == 0:
-                    feature_evidence0_count += 1
-                    feature_evidence0_sum +=  feature['weight'][vid][1]
-                elif variables[vid]['label'] == 1:
-                    feature_evidence1_count += 1
-                    feature_evidence1_sum += feature['weight'][vid][1]
-        if feature_evidence0_count!=0:
-            bound0 = feature_evidence0_sum/feature_evidence0_count
-        else:
-            bound0 = 0
-        if feature_evidence1_count != 0:
-            bound1 = feature_evidence1_sum/feature_evidence1_count
-        else:
-            bound1 = 0
-        feature['alpha_bound'] = copy([bound0,bound1])
-        feature['tau_bound'] = copy([0,10])
+        if feature['parameterize'] == 1:
+            feature_evidence0_count = 0
+            feature_evidence1_count = 0
+            feature_evidence0_sum = 0
+            feature_evidence1_sum = 0
+            for vid in feature['weight'].keys():
+                if variables[vid]['is_evidence'] == True:
+                    if variables[vid]['label'] == 0:
+                        feature_evidence0_count += 1
+                        feature_evidence0_sum +=  feature['weight'][vid][1]
+                    elif variables[vid]['label'] == 1:
+                        feature_evidence1_count += 1
+                        feature_evidence1_sum += feature['weight'][vid][1]
+            if feature_evidence0_count!=0:
+                bound0 = feature_evidence0_sum/feature_evidence0_count
+            else:
+                bound0 = 0
+            if feature_evidence1_count != 0:
+                bound1 = feature_evidence1_sum/feature_evidence1_count
+            else:
+                bound1 = 0
+            feature['alpha_bound'] = copy([bound0,bound1])
+            feature['tau_bound'] = copy([0,10])
 
 def entropy(probability):
     '''给定概率之后计算熵

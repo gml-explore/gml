@@ -7,7 +7,8 @@ from numbskull_extend import numbskull
 import logging
 from sklearn import metrics
 import gml_utils
-from evidential_support import EvidentialSupport
+# from evidential_support import EvidentialSupport
+from evidential_support_new import EvidentialSupport
 from evidence_select import EvidenceSelect
 from approximate_probability_estimation import ApproximateProbabilityEstimation
 from construct_subgraph import ConstructSubgraph
@@ -18,7 +19,7 @@ class GML:
     '''
     GML主类: Evidential Support -> Approximate Probability Estimation -> select topm -> select topk -> inference -> label
     '''
-    def __init__(self,variables, features, evidential_support_method, approximate_probability_method,
+    def __init__(self,variables, features,  approximate_probability_method,
                  evidence_select_method, construct_subgraph_method, learning_method,top_m=2000, top_k=10, label_num = 1,update_proportion= 0.01,
                  balance=False,optimization = False,optimization_threshold = 1e-6,learning_epoches = 1000,inference_epoches = 1000,
                  nprocess=1):
@@ -26,12 +27,12 @@ class GML:
         #check data
         variables_keys= ['var_id','is_easy','is_evidence','true_label','label','feature_set']
         features_keys = ['feature_id','feature_type','feature_name','weight']
-        evidential_support_methods = ['regression','relation']
+        # evidential_support_methods = ['regression','relation']
         approximate_probability_methods = ['interval','relation']
         evidence_select_methods = ['interval','relation']
         construct_subgraph_methods= ['unaryPara','mixture']
-        if evidential_support_method not in evidential_support_methods:
-            raise ValueError('evidential_support_method has no this method: '+evidential_support_method)
+        # if evidential_support_method not in evidential_support_methods:
+        #     raise ValueError('evidential_support_method has no this method: '+evidential_support_method)
         if approximate_probability_method not in approximate_probability_methods:
             raise ValueError('approximate_probability_method has no this method: '+approximate_probability_method)
         if evidence_select_method not in evidence_select_methods:
@@ -49,7 +50,7 @@ class GML:
 
         self.variables = variables
         self.features = features
-        self.evidential_support_method = evidential_support_method  # 选择evidential support的方法
+        # self.evidential_support_method = evidential_support_method  # 选择evidential support的方法
         self.evidence_select_method = evidence_select_method  # 选择select evidence的方法
         self.approximate_probability_method = approximate_probability_method  # 选择估计近似概率的方法
         self.construct_subgraph_method = construct_subgraph_method  # 选择构建因子图的方法
@@ -62,7 +63,7 @@ class GML:
         self.optimization_threshold = optimization_threshold
         self.update_proportion = update_proportion
         self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(variables)
-        self.support = EvidentialSupport(variables, features, evidential_support_method)
+        self.support = EvidentialSupport(variables, features)
         self.select = EvidenceSelect(variables, features)
         self.approximate = ApproximateProbabilityEstimation(variables,features,approximate_probability_method)
         self.subgraph = ConstructSubgraph(variables, features, balance)
@@ -90,7 +91,7 @@ class GML:
         '''
         config = ConfigParser()
         config.read(configFile, encoding='UTF-8')
-        evidential_support_method = config['para']['evidential_support_method']
+        # evidential_support_method = config['para']['evidential_support_method']
         approximate_probability_method = config['para']['approximate_probability_method']
         evidence_select_method = config['para']['evidence_select_method']
         construct_subgraph_method = config['para']['construct_subgraph_method']
@@ -104,7 +105,7 @@ class GML:
         balance = config['para'].getboolean('balance')
         optimization = config['para'].getboolean('optimization')
         optimization_threshold = float(config['para']['optimization_threshold'])
-        return GML(variables, features, evidential_support_method, approximate_probability_method,
+        return GML(variables, features, approximate_probability_method,
                  evidence_select_method, construct_subgraph_method,learning_method, top_m, top_k, label_num,update_proportion,
                  balance,optimization,optimization_threshold,learning_epoches,inference_epoches)
 
@@ -148,8 +149,10 @@ class GML:
         @param update_feature_set:
         @return:
         '''
-        method = 'self.support.evidential_support_by_' + self.evidential_support_method + '(variable_set,update_feature_set)'
+        method = 'self.support.evidential_support(variable_set,update_feature_set)'
         eval(method)
+        # support = EvidentialSupport(self.variables, self.features,update_proportion)
+        # support.evidential_support(variable_set, update_feature_set)
 
     def approximate_probability_estimation(self, variable_set):
         '''

@@ -36,7 +36,8 @@ feature
   *由用户提供的属性*
 *    *'feature_id'*: 此特征的id， int类型，从0开始计数       
 *    *'feature_type'*: 此特征是单因子特征还是双因子特征，目前支持unary_feature和binary_feature两种            
-*    *'feature_name'*: 特征名，可选 
+*    *'feature_name'*: 特征名，可选
+*    *'parameterize'* : 特征是否函数化（0或1）
 *    *'alpha_bound'*:[bound0,bound1] alpha的上下界  
 *    *'tau_bound'*:[bound0,bound1] tau的上下界                        
 *    *'weight'*:  此特征的所有相关变量信息                                                                 
