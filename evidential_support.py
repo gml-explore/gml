@@ -74,12 +74,12 @@ class EvidentialSupport:
     '''
     Evidential Support计算类
     '''
-    def __init__(self,variables,features,method = 'regression',evidence_interval_count=10):
+    def __init__(self,variables,features):
         self.variables = variables
         self.features = features
         self.features_easys = dict()  # 存放所有features的所有easy的featurevalue   :feature_id:[[value1,bound],[value2,bound]...]
         self.tau_and_regression_bound = 10
-        self.evidence_interval_count = evidence_interval_count  #区间数为10
+        self.evidence_interval_count = 10  #区间数为10
         self.NOT_NONE_VALUE = 1e-8
         self.n_job = 10
         self.delta = 2
@@ -90,11 +90,11 @@ class EvidentialSupport:
         self.evidence_interval = gml_utils.init_evidence_interval(self.evidence_interval_count)  #划分区间
         gml_utils.init_evidence(self.features, self.evidence_interval, self.observed_variables_set) #如果此特征是参数化特征，就划分证据到不同区间
         #根据evidential support方法的不同，分别做不同的初始化
-        if method == 'regression':
-            self.data_matrix = self.create_csr_matrix()
-            gml_utils.init_bound(self.variables,self.features)
-        if method =='relation':
-            self.dict_rel_acc = self.get_dict_rel_acc()
+        # if method == 'regression':
+        #     self.data_matrix = self.create_csr_matrix()
+        #     gml_utils.init_bound(self.variables,self.features)
+        # if method =='relation':
+        #     self.dict_rel_acc = self.get_dict_rel_acc()
 
     def get_unlabeled_var_feature_evi(self):
         '''

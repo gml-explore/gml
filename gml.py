@@ -2,7 +2,6 @@ import heapq
 import pickle
 import time
 from copy import copy
-
 from numbskull_extend import numbskull
 import logging
 from sklearn import metrics
@@ -16,28 +15,15 @@ from concurrent.futures import ProcessPoolExecutor
 
 class GML:
     '''
-    GML主类: Evidential Support -> Approximate Probability Estimation -> select topm -> select topk -> inference -> label
+     GML main process: evidentail support->select_topm->ApproximateProbabilityEstimation->select->topk->inference->label->score
     '''
-    def __init__(self,variables, features, evidential_support_method, approximate_probability_method,
-                 evidence_select_method, construct_subgraph_method, learning_method,top_m=2000, top_k=10, label_num = 1,update_proportion= 0.01,
-                 balance=False,optimization = False,optimization_threshold = 1e-6,learning_epoches = 1000,inference_epoches = 1000,
-                 nprocess=1):
-
+    def __init__(self,variables, features, learning_method,top_m=2000, top_k=10, top_n = 1,update_proportion= 0.01, balance=False,optimization_threshold = 1e-6,learning_epoches = 1000,inference_epoches = 1000,nprocess=1):
         #check data
         variables_keys= ['var_id','is_easy','is_evidence','true_label','label','feature_set']
-        features_keys = ['feature_id','feature_type','feature_name','weight']
-        evidential_support_methods = ['regression','relation']
-        approximate_probability_methods = ['interval','relation']
-        evidence_select_methods = ['interval','relation','general']
-        construct_subgraph_methods= ['unaryPara','mixture','general']
-        if evidential_support_method not in evidential_support_methods:
-            raise ValueError('evidential_support_method has no this method: '+evidential_support_method)
-        if approximate_probability_method not in approximate_probability_methods:
-            raise ValueError('approximate_probability_method has no this method: '+approximate_probability_method)
-        if evidence_select_method not in evidence_select_methods:
-            raise ValueError('evidence_select_method has no this method: '+evidence_select_method)
-        if construct_subgraph_method not in construct_subgraph_methods:
-            raise ValueError('construct_subgraph_method has no this method: '+construct_subgraph_method)
+        features_keys = ['feature_id','feature_type','parameterize','feature_name','weight']
+        learning_methods = ['sgd', 'bgd'] # now support sgd and bgd
+        if learning_method not in learning_methods:
+            raise ValueError('learning_methods has no this method: '+learning_method)
         for variable in variables:
             for attribute in variables_keys:
                 if attribute not in variable:
@@ -46,43 +32,40 @@ class GML:
             for attribute in features_keys:
                 if attribute not in feature:
                     raise ValueError('features has no key: '+attribute)
-
         self.variables = variables
         self.features = features
-        self.evidential_support_method = evidential_support_method  # 选择evidential support的方法
-        self.evidence_select_method = evidence_select_method  # 选择select evidence的方法
-        self.approximate_probability_method = approximate_probability_method  # 选择估计近似概率的方法
-        self.construct_subgraph_method = construct_subgraph_method  # 选择构建因子图的方法
-        self.learning_method = learning_method  #梯度下降使用的方法（sgd或者bgd）
-        self.labeled_variables_set = set()  # 所有新标记变量集合
+        self.learning_method = learning_method
+        self.labeled_variables_set = set()
         self.top_m = top_m
         self.top_k = top_k
-        self.label_num = label_num
-        self.optimization = optimization
+        self.top_n = top_n
         self.optimization_threshold = optimization_threshold
         self.update_proportion = update_proportion
-        self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(variables)
-        self.support = EvidentialSupport(variables, features, evidential_support_method)
+        self.support = EvidentialSupport(variables, features)
         self.select = EvidenceSelect(variables, features)
-        self.approximate = ApproximateProbabilityEstimation(variables,features,approximate_probability_method)
+        self.approximate = ApproximateProbabilityEstimation(variables,features)
         self.subgraph = ConstructSubgraph(variables, features, balance)
         self.learing_epoches = learning_epoches
         self.inference_epoches = inference_epoches
         self.nprocess = nprocess
-        self.now = str(time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time())))
-        #log
-        logging.basicConfig(
-            level=logging.INFO,  # 设置输出信息等级
-            format='%(asctime)s - %(name)s - [%(levelname)s]: %(message)s'  # 设置输出格式
-        )
+        self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(variables)
+        evidence_interval = gml_utils.init_evidence_interval(10)
+        gml_utils.init_bound(variables,features)
+        gml_utils.init_evidence(features,evidence_interval,self.observed_variables_set)
         #save results
+        self.now = str(time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time())))
         with open(self.now+'-result.txt', 'w') as f:
             f.write('var_id'+' '+'inferenced_probability'+' '+'inferenced_label'+' '+'ture_label'+'\n')
+        #logging
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - [%(levelname)s]: %(message)s'
+        )
 
     @staticmethod
     def initial(configFile,variables,features):
         '''
-        读取配置文件中的参数
+        load config from file
         @param configFile:
         @param variables:
         @param features:
@@ -90,79 +73,38 @@ class GML:
         '''
         config = ConfigParser()
         config.read(configFile, encoding='UTF-8')
-        evidential_support_method = config['para']['evidential_support_method']
-        approximate_probability_method = config['para']['approximate_probability_method']
-        evidence_select_method = config['para']['evidence_select_method']
-        construct_subgraph_method = config['para']['construct_subgraph_method']
         learning_method = config['para']['learning_method']
         learning_epoches = int(config['para']['learning_epoches'])
         inference_epoches = int(config['para']['inference_epoches'])
         top_m = int(config['para']['top_m'])
         top_k = int(config['para']['top_k'])
-        label_num = int(config['para']['label_num'])
+        top_n = int(config['para']['top_n'])
+        n_process = int(config['para']['n_process'])
         update_proportion = float(config['para']['update_proportion'])
         balance = config['para'].getboolean('balance')
-        optimization = config['para'].getboolean('optimization')
         optimization_threshold = float(config['para']['optimization_threshold'])
-        return GML(variables, features, evidential_support_method, approximate_probability_method,
-                 evidence_select_method, construct_subgraph_method,learning_method, top_m, top_k, label_num,update_proportion,
-                 balance,optimization,optimization_threshold,learning_epoches,inference_epoches)
-
-    def update_bound(self,var_id):
-        '''
-        在每轮标记完成后对参数上下界进行更新
-        @param var_id:
-        @return:
-        '''
-        feature_set = self.variables[var_id]['feature_set']
-        for feature_id in feature_set.keys():
-            feature_evidence0_count = 0
-            feature_evidence1_count = 0
-            feature_evidence0_sum = 0
-            feature_evidence1_sum = 0
-            weight = self.features[feature_id]['weight']
-            for vid in weight.keys():
-                if self.variables[vid]['is_evidence'] == True:
-                    if self.variables[vid]['label'] == 0:
-                        feature_evidence0_count += 1
-                        feature_evidence0_sum += weight[vid][1]
-                    elif self.variables[vid]['label'] == 1:
-                        feature_evidence1_count += 1
-                        feature_evidence1_sum += weight[vid][1]
-            if feature_evidence0_count != 0:
-                bound0 = feature_evidence0_sum / feature_evidence0_count
-            else:
-                bound0 = 0
-            if feature_evidence1_count != 0:
-                bound1 = feature_evidence1_sum / feature_evidence1_count
-            else:
-                bound1 = 0
-            self.features[feature_id]['alpha_bound'] = copy([bound0, bound1])
-            self.features[feature_id]['tau_bound'] = copy([-10, 10])
-
+        return GML(variables, features, learning_method, top_m, top_k, top_n,update_proportion,balance,optimization_threshold,learning_epoches,inference_epoches,n_process)
 
     def evidential_support(self, variable_set,update_feature_set):
         '''
-        计算evidential support
+        calculate evidential_support
         @param variable_set:
         @param update_feature_set:
         @return:
         '''
-        method = 'self.support.evidential_support_by_' + self.evidential_support_method + '(variable_set,update_feature_set)'
-        eval(method)
+        self.support.evidential_support(variable_set,update_feature_set)
 
     def approximate_probability_estimation(self, variable_set):
         '''
-        近似概率计算
+        estimation approximate_probability
         @param variable_set:
         @return:
         '''
-        method = 'self.approximate.approximate_probability_estimation_by_' + self.approximate_probability_method + '(variable_set)'
-        eval(method)
+        self.approximate.approximate_probability_estimation(variable_set)
 
     def select_top_m_by_es(self, m):
         '''
-        根据计算出的Evidential Support(从大到小)选前m个隐变量
+        select tom m largest ES poential variables
         @param m:
         @return:
         '''
@@ -181,7 +123,7 @@ class GML:
 
     def select_top_k_by_entropy(self, var_id_list, k):
         '''
-        计算熵，选出top_k个熵小的隐变量
+        select top k  smallest entropy poential variables
         @param var_id_list:
         @param k:
         @return:
@@ -199,35 +141,33 @@ class GML:
         logging.info('select k finished')
         return k_id_list
 
-    def select_evidence(self, var_id):
+    def evidence_select(self, var_id):
         '''
-        为每个隐变量挑选证据
+        select evidence for construct subgraph
         @param var_id:
         @return:
         '''
-        method = 'self.select.select_evidence_by_' + self.evidence_select_method + "(var_id)"
-        connected_var_set, connected_edge_set, connected_feature_set = eval(method)
+        connected_var_set, connected_edge_set, connected_feature_set = self.select.evidence_select(var_id)
         return connected_var_set, connected_edge_set, connected_feature_set
 
     def construct_subgraph(self, var_id):
         '''
-        构建子图
+        construct_subgraph
         @param var_id:
         @return:
         '''
-        evidences = self.select_evidence(var_id)
-        method = 'self.subgraph.construct_subgraph_for_' + self.construct_subgraph_method + "(evidences,var_id)"
-        weight, variable, factor, fmap, domain_mask, edges_num, var_map,alpha_bound,tau_bound,weight_map_feature,sample_list,wmap,wfactor = eval(method)
+        evidences = self.evidence_select(var_id)
+        weight, variable, factor, fmap, domain_mask, edges_num, var_map,alpha_bound,tau_bound,weight_map_feature,sample_list,wmap,wfactor = self.subgraph.construct_subgraph(evidences,var_id)
         return weight, variable, factor, fmap, domain_mask, edges_num, var_map,alpha_bound,tau_bound,weight_map_feature,sample_list,wmap,wfactor
 
     def inference_subgraph(self, var_id):
         '''
-        推理子图
-        @param var_id: 待推理的变量id
+        subgraph learning and inference
+        @param var_id:
         @return:
         '''
-        if not (type(var_id) == set or type(var_id) == list  or type(var_id) == int):
-            raise ValueError('var_id should be set,list,or int' )
+        if not type(var_id) == int:
+            raise ValueError('var_id should be int' )
         ns_learing = numbskull.NumbSkull(
             n_inference_epoch=self.learing_epoches,
             n_learning_epoch=self.inference_epoches,
@@ -293,7 +233,7 @@ class GML:
 
     def label(self,var_id_list):
         '''
-        从topk个已推理变量中中选一个熵最小的进行标记
+        label top_n poential variables
         @param var_id_list:
         @return:
         '''
@@ -303,10 +243,10 @@ class GML:
             var_index = var_id
             self.variables[var_index]['entropy'] = gml_utils.entropy(self.variables[var_index]['inferenced_probability'])
             entropy_list.append([var_id, self.variables[var_index]['entropy']])
-        #如果labelnum小于传进来的变量的个数，就选labelnum个
-        if len(var_id_list) > self.label_num:
+        #如果labelnum小于传进来的变量的个数，就选top_n个
+        if len(var_id_list) > self.top_n:
             var = list()
-            min_var_list = heapq.nsmallest(self.label_num, entropy_list, key=lambda x: x[1])  # 选出熵最小的变量
+            min_var_list = heapq.nsmallest(self.top_n, entropy_list, key=lambda x: x[1])  # 选出熵最小的变量
             for mv in min_var_list:
                 label_list.append(mv[0])
         #否则标记传进来的全部变量
@@ -330,7 +270,10 @@ class GML:
 
 
     def inference(self):
-        '''主流程'''
+        '''
+        Through the main process
+        @return:
+        '''
         labeled_var = 0
         labeled_count = 0
         var = 0  #每轮标记的变量id
@@ -342,16 +285,15 @@ class GML:
             update_cache = int(self.update_proportion * len(self.poential_variables_set))  # 每推理update_cache个变量后需要重新计算evidential support
         self.evidential_support(self.poential_variables_set, None)
         self.approximate_probability_estimation(self.poential_variables_set)
-        # 如果熵小于某个阈值，直接标记，不用推理
-        if self.optimization == True:
+        # If the entropy is less than a certain threshold, mark it directly without reasoning
+        if self.optimization_threshold >=0 and self.optimization_threshold <1:
             with open(self.now+'-result.txt', 'a') as f:
                 for vid in self.poential_variables_set:
                     if self.variables[vid]['entropy'] <= self.optimization_threshold:
                         self.variables[vid]['probability'] = self.variables[vid]['approximate_probability']
                         self.variables[vid]['is_evidence'] = True
                         self.variables[vid]['label'] = 1 if  self.variables[vid]['probability'] >= 0.5 else 0
-                        if self.evidence_select_method == 'interval':
-                            gml_utils.write_labeled_var_to_evidence_interval(self.variables, self.features, vid,self.support.evidence_interval)
+                        gml_utils.update_evidence(self.variables, self.features, var, self.support.evidence_interval)
                         logging.info('var-'+str(vid)+' labeled succeed---------------------------------------------')
                         probability = self.variables[vid]['probability']
                         label = self.variables[vid]['label']
@@ -359,11 +301,9 @@ class GML:
                         f.write(f'{vid:7} {probability:10} {label:4} {true_label:4}')
                         f.write('\n')
                         self.labeled_variables_set.add(vid)
-                f.write('Below are the variables for true inference>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'+'\n')
             self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(self.variables)
             self.evidential_support(self.poential_variables_set, None)
             self.approximate_probability_estimation(self.poential_variables_set)
-
         while len(self.poential_variables_set) > 0:
             # update_proportion小于等于0表示不需要更新evidential support
             if self.update_proportion <= 0:
@@ -399,9 +339,8 @@ class GML:
                     for ft in futures:
                         self.variables[ft.result()[0]]['inferenced_probability'] = ft.result()[1]
             label_list = self.label(k_list)
-            if self.evidence_select_method == 'interval':
-                gml_utils.write_labeled_var_to_evidence_interval(self.variables, self.features, var, self.support.evidence_interval)
-                self.update_bound(var)  # 每标记一个变量之后更新上下界
+            gml_utils.update_evidence(self.variables, self.features, var, self.support.evidence_interval)
+            gml_utils.update_bound(self.variables,self.features,var)  # 每标记一个变量之后更新上下界
             labeled_var += len(label_list)
             labeled_count += len(label_list)
             logging.info("label_count=" + str(labeled_count))
@@ -410,7 +349,7 @@ class GML:
 
     def save_model(self):
         '''
-        推理完成后，保存经过推理后的因子图，应当保存变量，因子，学习后的权重等。
+        save models
         @return:
         '''
         with open(self.now+"_variables.pkl",'wb') as v:
@@ -418,10 +357,9 @@ class GML:
         with open(self.now+"_features.pkl",'wb') as v:
             pickle.dump(self.features,v)
 
-
     def score(self):
         '''
-        计算推理结果的准确率，精确率，召回率，f1值等
+        calculate metrics
         :return:
         '''
         easys_pred_label = list()

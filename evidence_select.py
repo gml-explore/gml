@@ -4,17 +4,15 @@ import random
 
 
 class EvidenceSelect:
-    def __init__(self, variables, features, interval_evidence_count = 200, subgraph_max_num=1000,subgraph_min_num=100, k_hop=1,subgraph_ratio=0.1):
+    def __init__(self, variables, features, interval_evidence_count = 200, subgraph_max_num=1000,each_feature_evidence_limit = 100):
         self.variables = variables  #变量集合
         self.features = features    #特征集合
         self.subgraph_max_num = subgraph_max_num    #子图允许的最大变量个数
-        self.subgraph_min_num = subgraph_min_num  # 子图允许的最少变量个数
-        self.k_hop = k_hop  #跳数
-        self.subgraph_ratio = subgraph_ratio
         self.interval_evidence_count = interval_evidence_count   #，统一划分成10个区间，每个区间采样的证据变量个数
+        self.each_feature_evidence_limit = each_feature_evidence_limit   #限制子图中每个单因子的证据变量数目
 
 
-    def select_evidence_by_general(self, var_id):
+    def evidence_select(self, var_id):
         '''
         统一的证据选择方法
         connected_var_set = set()  子图变量集合
@@ -22,8 +20,9 @@ class EvidenceSelect:
         connected_feature_set = set() 子图特征(因子)集合
         '''
         if type(var_id) == int:
-            subgraph_max_num = (int)(len(self.variables)*self.subgraph_ratio)
-            random_sample_num = 10 #没有feratureValue时每个单因子要采样的证据数目
+            #subgraph_max_num = (int)(len(self.variables)*self.subgraph_ratio)
+            subgraph_max_num = self.subgraph_max_num
+            random_sample_num = self.each_feature_evidence_limit  #没有feratureValue时每个单因子要采样的证据数目
             connected_var_set = set()  #最后再添加隐变量id
             connected_edge_set = set()   #[feature_id,var_id]
             connected_feature_set = set()
@@ -121,7 +120,7 @@ class EvidenceSelect:
             for feature_id in unary_feature_set:
                 if self.features[feature_id]['evidence_count'] > 0:
                     connected_edge_set.add((feature_id,var_id))
-            logging.info("select evidence by general finished")
+            logging.info("select evidence finished")
             return connected_var_set, connected_edge_set, connected_feature_set
         else:
             raise ValueError('input type error')
@@ -181,7 +180,7 @@ class EvidenceSelect:
         '''
         if type(var_id) == int:
             subgraph_max_num = self.subgraph_max_num
-            k_hop = self.k_hop
+            k_hop = 2
             connected_var_set = set()
             connected_edge_set = set()
             connected_feature_set = set()  # 记录此隐变量上建因子图时实际保留了哪些feature
@@ -261,11 +260,3 @@ class EvidenceSelect:
             return connected_var_set, connected_edge_set, connected_feature_set
         else:
             raise ValueError('input type error')
-
-
-    def select_evidence_by_custom(self,var_id):
-        '''
-        用户自定义的挑选证据变量的方法
-        :param var_id:
-        :return:
-        '''

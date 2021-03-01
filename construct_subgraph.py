@@ -11,7 +11,7 @@ class ConstructSubgraph:
         self.features = features    #因子图特征
         self.balance = balance      #是否需要平衡证据变量中0和1的数目
 
-    def construct_subgraph_for_general(self, evidences,var_id):
+    def construct_subgraph(self, evidences,var_id):
         connected_var_set, connected_edge_set, connected_feature_set = evidences
         var_map = dict()  # 用来记录self.variables与numbskull的variable变量id的映射-(self,numbskull)
         # 1.初始化variable
