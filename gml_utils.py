@@ -6,8 +6,8 @@ from copy import  copy
 def load_easy_instance_from_file(filename):
     '''
     load easy's id and lable from csv file
-    :param filename:
-    :return:
+    @param filename:
+    @return:
     '''
     easy_data = pd.read_csv(filename)
     easy_pair = {'var_id': 0, 'label': 1}
@@ -21,8 +21,8 @@ def load_easy_instance_from_file(filename):
 def separate_variables(variables):
     '''
     seperate variables to observed_variables_set and poential_variables_set
-    :param variables:
-    :return:
+    @param variables:
+    @return:
     '''
     observed_variables_set = set()
     poential_variables_set = set()
@@ -36,8 +36,8 @@ def separate_variables(variables):
 def init_evidence_interval(evidence_interval_count):
     '''
     initial evidence interval
-    :param evidence_interval_count:
-    :return:
+    @param evidence_interval_count:
+    @return:
     '''
     evidence_interval = list()
     step = float(1) / evidence_interval_count
@@ -55,8 +55,11 @@ def init_evidence_interval(evidence_interval_count):
 
 def init_evidence(features,evidence_interval,observed_variables_set):
     '''
-   Add the evidence_interval attribute and the evidence_count attribute for each feature
-    :return:
+    Add the evidence_interval attribute and the evidence_count attribute for each feature
+    @param features:
+    @param evidence_interval:
+    @param observed_variables_set:
+    @return:
     '''
     for feature in features:
         evidence_count = 0
@@ -81,8 +84,11 @@ def init_evidence(features,evidence_interval,observed_variables_set):
 def update_evidence(variables,features,var_id,evidence_interval):
     '''
     update evidence_interval and evidence_count after label variables
-    :param var_id:
-    :return:
+    @param variables:
+    @param features:
+    @param var_id:
+    @param evidence_interval:
+    @return:
     '''
     var_index = var_id
     feature_set = variables[var_index]['feature_set']
@@ -99,6 +105,7 @@ def update_evidence(variables,features,var_id,evidence_interval):
 
 def init_bound(variables,features):
     '''
+    init para bound
     @param variables:
     @param features:
     @return:
