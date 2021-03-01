@@ -105,14 +105,16 @@ class EvidentialSupport:
             else:
                 dict_rel_acc[rel] = 0.9
         return dict_rel_acc
-    def construct_mass_function_for_propensity(uncertain_degree, label_prob, unlabel_prob):
-    '''
-    # l: support for labeling
-    # u: support for unalbeling
-    '''
+
+    def construct_mass_function_for_propensity(self,uncertain_degree, label_prob, unlabel_prob):
+        '''
+        # l: support for labeling
+        # u: support for unalbeling
+        '''
         return MassFunction({'l': (1 - uncertain_degree) * label_prob,
-                         'u': (1 - uncertain_degree) * unlabel_prob,
-                         'lu': uncertain_degree})
+                             'u': (1 - uncertain_degree) * unlabel_prob,
+                             'lu': uncertain_degree})
+
     def construct_mass_function_for_para_feature(theta):
     '''
     # l: support for labeling
@@ -227,24 +229,24 @@ class EvidentialSupport:
                     if self.features[fid]['paramterize']  == 1 :
                         mass_functions.append(construct_mass_function_for_para_feature(var['feature_set'][fid][0]))
                     else :
-                        if 'unary_feature_evi_prob' in self.variables[vid]:
-                            if len(self.variables[vid]['unary_feature_evi_prob']) > 0:
-                                for (feature_id, feature_name, n_samples, neg_prob, pos_prob) in self.variables[vid]['unary_feature_evi_prob']:
+                        if 'unary_feature_evi_prob' in var:
+                            if len(var['unary_feature_evi_prob']) > 0:
+                                for (feature_id, feature_name, n_samples, neg_prob, pos_prob) in var['unary_feature_evi_prob']:
                                     mass_functions.append(evidential_support_by_massFunction.construct_mass_function_for_propensity(self.word_evi_uncer_degree, max(pos_prob, neg_prob),min(pos_prob, neg_prob)))
                 if self.features[fid]['feature_type'] == 'binary_feature':               
-                    if 'binary_feature_evi' in self.variables[vid]:
-                        if len(self.variables[vid]['binary_feature_evi']) > 0:
-                            for (anotherid, feature_name, feature_id) in self.variables[vid]['binary_feature_evi']:
+                    if 'binary_feature_evi' in var:
+                        if len(var['binary_feature_evi']) > 0:
+                            for (anotherid, feature_name, feature_id) in var['binary_feature_evi']:
                                 rel_acc = self.dict_rel_acc[feature_name]
                                 mass_functions.append(evidential_support_by_massFunction.construct_mass_function_for_propensity(self.relation_evi_uncer_degree,rel_acc, 1-rel_acc))
             if len(mass_functions) > 0:
                 combine_evidential_support = evidential_support_by_massFunction.labeling_propensity_with_ds(mass_functions)
-                self.variables[vid]['evidential_support'] = combine_evidential_support['l']
-                print('vid', vid)
-                print('evidential_support', self.variables[vid]['evidential_support'])
+                var['evidential_support'] = combine_evidential_support['l']
+                print('vid', var['var_id'])
+                print('evidential_support', var['evidential_support'])
                 mass_functions.clear()
             else:
-                self.variables[vid]['evidential_support'] = 0.0
+                var['evidential_support'] = 0.0
 
         logging.info("evidential_support_by_relation finished")
 
