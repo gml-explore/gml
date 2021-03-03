@@ -6,10 +6,68 @@ import logging
 import numpy as np
 import gml_utils
 from pyds import MassFunction
-import evidential_support_by_regression
-import evidential_support_by_massFunction
 
+class Regression:
+    '''
+    线性回归相关类，对所有feature进行线性回归
+    todo: feature回归的更新策略:只回归证据支持有变化的feature
+    '''
+    def __init__(self, each_feature_easys, n_job,effective_training_count_threshold =2):
+        '''
+        初始化
+        @param each_feature_easys:
+        @param n_job:
+        @param effective_training_count_threshold:
+        '''
+        self.effective_training_count = max(2, effective_training_count_threshold)
+        self.n_job = n_job
+        if len(each_feature_easys) > 0:
+            XY = np.array(each_feature_easys)
+            self.X = XY[:, 0].reshape(-1, 1)
+            self.Y = XY[:, 1].reshape(-1, 1)
+        else:
+            self.X = np.array([]).reshape(-1, 1)
+            self.Y = np.array([]).reshape(-1, 1)
+        self.balance_weight_y0_count = 0
+        self.balance_weight_y1_count = 0
+        for y in self.Y:
+            if y > 0:
+                self.balance_weight_y1_count += 1
+            else:
+                self.balance_weight_y0_count += 1
+        self.perform()
 
+    def perform(self):
+        '''
+        执行线性回归
+        @return:
+        '''
+        self.N = np.size(self.X)
+        if self.N <= self.effective_training_count:
+            self.regression = None
+            self.residual = None
+            self.meanX = None
+            self.variance = None
+            self.k = None
+            self.b = None
+        else:
+            sample_weight_list = None
+            if self.balance_weight_y1_count > 0 and self.balance_weight_y0_count > 0:
+                sample_weight_list = list()
+                sample_weight = float(self.balance_weight_y0_count) / self.balance_weight_y1_count
+                for y in self.Y:
+                    if y[0] > 0:
+                        sample_weight_list.append(sample_weight)
+                    else:
+                        sample_weight_list.append(1)
+            self.regression = LinearRegression(copy_X=True, fit_intercept=True, n_jobs=self.n_job).fit(self.X, self.Y,
+                                                                                                       sample_weight=sample_weight_list)
+            self.residual = np.sum((self.regression.predict(self.X) - self.Y) ** 2) / (self.N - 2)
+            self.meanX = np.mean(self.X)  # 此feature的所有证据变量的feature_value的平均值
+            self.variance = np.sum((self.X - self.meanX) ** 2)
+            z = self.regression.predict(np.array([0, 1]).reshape(-1, 1))
+            self.k = (z[1] - z[0])[0]
+            self.b = z[0][0]
 class EvidentialSupport:
     '''
     Evidential Support计算类
@@ -119,7 +177,7 @@ class EvidentialSupport:
     def labeling_propensity_with_ds(self,mass_functions):
         combined_mass = gml_utils.combine_evidences_with_ds(mass_functions, normalization=True)
         return combined_mass
-    def pre_evidential_support(self,variable_set,update_feature_set):
+    def computer_unary_feature_es(self):
         data = list()
         row = list()
         col = list()
@@ -128,18 +186,18 @@ class EvidentialSupport:
         for fea in self.features:
             if fea['parameterize'] == 1:
                 fea_len += 1
-        for index, var in enumerate(variables):
+        for index, var in enumerate(self.variables):
             count = 0
-            feature_set = variables[index]['feature_set']
+            feature_set = self.variables[index]['feature_set']
             for feature_id in feature_set:
-                if features[feature_id]['parameterize'] == 1:
+                if self.features[feature_id]['parameterize'] == 1:
                     count += 1
             if count > 0:
                 var_len += 1
-        for index, var in enumerate(variables):
-            feature_set = variables[index]['feature_set']
+        for index, var in enumerate(self.variables):
+            feature_set = self.variables[index]['feature_set']
             for feature_id in feature_set:
-                if features[feature_id]['parameterize'] == 1:
+                if self.features[feature_id]['parameterize'] == 1:
                     data.append(feature_set[feature_id][1] + 1e-8)
                     row.append(index)
                     col.append(feature_id)
@@ -184,8 +242,6 @@ class EvidentialSupport:
                 residuals.append(feature['regression'].residual if feature['regression'].residual is not None else np.NaN)
                 meanX.append(feature['regression'].meanX if feature['regression'].meanX is not None else np.NaN)
                 variance.append(feature['regression'].variance if feature['regression'].variance is not None else np.NaN)
-        # coefs = np.array(coefs)[col]
-        # intercept = np.array(intercept)[col]
         if len(zero_confidence) != 0:
             zero_confidence = np.array(zero_confidence)[col]
         if len(residuals) != 0 and len(Ns) != 0 and len(meanX) != 0 and len(variance) != 0:
@@ -214,6 +270,7 @@ class EvidentialSupport:
         self.dict_rel_acc = self.get_dict_rel_acc()
         self.get_unlabeled_var_feature_evi()
         mass_functions = list()
+        self.computer_unary_feature_es()
         for vid in variable_set:
             var = self.variables[vid]
             for fid in self.variables[vid]['feature_set']:
@@ -272,7 +329,7 @@ class EvidentialSupport:
             for feature_id in update_feature_set:
                 # 对于某些features_easys为空的feature,回归后regression为none
                 if self.features[feature_id]['parameterize'] == 1:
-                    self.features[feature_id]['regression'] = evidential_support_by_regression.Regression(self.features_easys[feature_id], n_job=self.n_job)
+                    self.features[feature_id]['regression'] = Regression(self.features_easys[feature_id], n_job=self.n_job)
             logging.info("feature regression finished")
 
 
