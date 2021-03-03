@@ -105,7 +105,6 @@ class EvidentialSupport:
             else:
                 dict_rel_acc[rel] = 0.9
         return dict_rel_acc
-
     def construct_mass_function_for_propensity(self,uncertain_degree, label_prob, unlabel_prob):
         '''
         # l: support for labeling
@@ -114,18 +113,10 @@ class EvidentialSupport:
         return MassFunction({'l': (1 - uncertain_degree) * label_prob,
                              'u': (1 - uncertain_degree) * unlabel_prob,
                              'lu': uncertain_degree})
+    def construct_mass_function_for_para_feature(self,theta):
+        return MassFunction ({'l':theta,'u':1-theta})
 
-    def construct_mass_function_for_para_feature(theta):
-    '''
-    # l: support for labeling
-    # u: support for unalbeling
-    '''
-        return MassFunction({'l': theta,
-                         'u': (1 - theta)})
-
-
-
-    def labeling_propensity_with_ds(mass_functions):
+    def labeling_propensity_with_ds(self,mass_functions):
         combined_mass = gml_utils.combine_evidences_with_ds(mass_functions, normalization=True)
         return combined_mass
     def pre_evidential_support(self,variable_set,update_feature_set):
@@ -134,7 +125,7 @@ class EvidentialSupport:
         col = list()
         var_len = 0
         fea_len = 0
-        for fea in self.features
+        for fea in self.features:
             if fea['parameterize'] == 1:
                 fea_len += 1
         for index, var in enumerate(variables):
@@ -223,27 +214,28 @@ class EvidentialSupport:
         self.dict_rel_acc = self.get_dict_rel_acc()
         self.get_unlabeled_var_feature_evi()
         mass_functions = list()
-        for var in self.variables:
-            for fid in var['feature_set']:
+        for vid in variable_set:
+            var = self.variables[vid]
+            for fid in self.variables[vid]['feature_set']:
                 if self.features[fid]['feature_type'] == 'unary_feature':
                     if self.features[fid]['paramterize']  == 1 :
-                        mass_functions.append(construct_mass_function_for_para_feature(var['feature_set'][fid][0]))
+                        mass_functions.append(self.construct_mass_function_for_para_feature(var['feature_set'][fid][0]))
                     else :
-                        if 'unary_feature_evi_prob' in var:
+                        if 'unary_feature_evi_prob' in self.variables[vid]:
                             if len(var['unary_feature_evi_prob']) > 0:
                                 for (feature_id, feature_name, n_samples, neg_prob, pos_prob) in var['unary_feature_evi_prob']:
-                                    mass_functions.append(evidential_support_by_massFunction.construct_mass_function_for_propensity(self.word_evi_uncer_degree, max(pos_prob, neg_prob),min(pos_prob, neg_prob)))
+                                    mass_functions.append(self.construct_mass_function_for_propensity(self.word_evi_uncer_degree, max(pos_prob, neg_prob),min(pos_prob, neg_prob)))
                 if self.features[fid]['feature_type'] == 'binary_feature':               
                     if 'binary_feature_evi' in var:
                         if len(var['binary_feature_evi']) > 0:
                             for (anotherid, feature_name, feature_id) in var['binary_feature_evi']:
                                 rel_acc = self.dict_rel_acc[feature_name]
-                                mass_functions.append(evidential_support_by_massFunction.construct_mass_function_for_propensity(self.relation_evi_uncer_degree,rel_acc, 1-rel_acc))
+                                mass_functions.append(self.construct_mass_function_for_propensity(self.relation_evi_uncer_degree,rel_acc, 1-rel_acc))
             if len(mass_functions) > 0:
-                combine_evidential_support = evidential_support_by_massFunction.labeling_propensity_with_ds(mass_functions)
+                combine_evidential_support = self.labeling_propensity_with_ds(mass_functions)
                 var['evidential_support'] = combine_evidential_support['l']
-                print('vid', var['var_id'])
-                print('evidential_support', var['evidential_support'])
+                #print('vid', var['var_id'])
+                #print('evidential_support', var['evidential_support']) 
                 mass_functions.clear()
             else:
                 var['evidential_support'] = 0.0
