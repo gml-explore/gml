@@ -11,7 +11,6 @@ class EvidenceSelect:
         self.interval_evidence_count = interval_evidence_count   #，统一划分成10个区间，每个区间采样的证据变量个数
         self.each_feature_evidence_limit = each_feature_evidence_limit   #限制子图中每个单因子的证据变量数目
 
-
     def evidence_select(self, var_id):
         '''
         统一的证据选择方法

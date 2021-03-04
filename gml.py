@@ -48,10 +48,13 @@ class GML:
         self.learing_epoches = learning_epoches
         self.inference_epoches = inference_epoches
         self.nprocess = nprocess
+        self.evidence_interval_count = 10
+        self.all_feature_set = set([x for x in range(0,len(features))])
         self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(variables)
-        evidence_interval = gml_utils.init_evidence_interval(10)
+        # 初始化一些必需的属性
+        self.evidence_interval = gml_utils.init_evidence_interval(self.evidence_interval_count) #均匀划分区间
         gml_utils.init_bound(variables,features)
-        gml_utils.init_evidence(features,evidence_interval,self.observed_variables_set)
+        gml_utils.init_evidence(features,self.evidence_interval,self.observed_variables_set)
         #save results
         self.now = str(time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time())))
         with open(self.now+'-result.txt', 'w') as f:
@@ -222,14 +225,13 @@ class GML:
         ns_inference.loadFactorGraph(*subgraph)
         ns_inference.inference()
         logging.info("subgraph inference finished")
-        # 写回概率到self.variables
+        # 写回概率到self.variables,此处P
         if type(var_id) == set or type(var_id) == list:
             for id in var_id:
                 self.variables[id]['inferenced_probability'] = ns_inference.factorGraphs[0].marginals[var_map[id]]
         elif type(var_id) == int:
             self.variables[var_id]['inferenced_probability'] = ns_inference.factorGraphs[0].marginals[var_map[var_id]]
         logging.info("inferenced probability recored")
-        return var_id,ns_inference.factorGraphs[0].marginals[var_map[var_id]]
 
     def label(self,var_id_list):
         '''
@@ -276,8 +278,6 @@ class GML:
         '''
         labeled_var = 0
         labeled_count = 0
-        var = 0  #每轮标记的变量id
-        m_list = list()
         update_feature_set = set()  # 存储一轮更新期间证据支持发生变化的feature
         inferenced_variables_id = set()  #一轮更新期间已经建立过因子图并推理的隐变量
         pool = ProcessPoolExecutor(self.nprocess)
@@ -293,7 +293,7 @@ class GML:
                         self.variables[vid]['probability'] = self.variables[vid]['approximate_probability']
                         self.variables[vid]['is_evidence'] = True
                         self.variables[vid]['label'] = 1 if  self.variables[vid]['probability'] >= 0.5 else 0
-                        gml_utils.update_evidence(self.variables, self.features, var, self.support.evidence_interval)
+                        gml_utils.update_evidence(self.variables, self.features, [vid], self.evidence_interval)
                         logging.info('var-'+str(vid)+' labeled succeed---------------------------------------------')
                         probability = self.variables[vid]['probability']
                         label = self.variables[vid]['label']
@@ -302,12 +302,12 @@ class GML:
                         f.write('\n')
                         self.labeled_variables_set.add(vid)
             self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(self.variables)
-            self.evidential_support(self.poential_variables_set, None)
+            self.evidential_support(self.poential_variables_set, self.all_feature_set)
             self.approximate_probability_estimation(self.poential_variables_set)
         while len(self.poential_variables_set) > 0:
-            # update_proportion小于等于0表示不需要更新evidential support
+            # update_proportion小于等于0表示每标记一次变量都需要更新evidential_support
             if self.update_proportion <= 0:
-                self.evidential_support(self.poential_variables_set, None)
+                self.evidential_support(self.poential_variables_set, self.all_feature_set)
                 self.approximate_probability_estimation(self.poential_variables_set)
             if  self.update_proportion > 0 and labeled_var == update_cache:
                 #当标记的变量数目达到update_cache时，重新回归并计算evidential support
@@ -322,11 +322,10 @@ class GML:
                 inferenced_variables_id.clear()
             m_list = self.select_top_m_by_es(self.top_m)
             k_list = self.select_top_k_by_entropy(m_list, self.top_k)
-            add_list = [x for x in k_list if x not in inferenced_variables_id]
+            add_list = [x for x in k_list if x not in inferenced_variables_id]  #每轮推理中新增的变量
             if len(add_list) > 0:
                 if (self.nprocess == 1):
                     for var_id in add_list:
-                    #if var_id not in inferenced_variables_id:
                         self.inference_subgraph(var_id)
                         # 每轮更新期间推理过的变量，因为参数没有更新，所以无需再进行推理。
                         inferenced_variables_id.add(var_id)
@@ -339,17 +338,17 @@ class GML:
                     for ft in futures:
                         self.variables[ft.result()[0]]['inferenced_probability'] = ft.result()[1]
             label_list = self.label(k_list)
-            gml_utils.update_evidence(self.variables, self.features, var, self.support.evidence_interval)
-            gml_utils.update_bound(self.variables,self.features,var)  # 每标记一个变量之后更新上下界
+            gml_utils.update_evidence(self.variables, self.features, label_list, self.evidence_interval)
+            gml_utils.update_bound(self.variables,self.features,label_list)  # 每标记一个变量之后更新上下界
             labeled_var += len(label_list)
             labeled_count += len(label_list)
             logging.info("label_count=" + str(labeled_count))
         #output results
         self.score()
 
-    def save_model(self):
+    def save_results(self):
         '''
-        save models
+        save results
         @return:
         '''
         with open(self.now+"_variables.pkl",'wb') as v:

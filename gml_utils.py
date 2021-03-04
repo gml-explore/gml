@@ -81,7 +81,7 @@ def init_evidence(features,evidence_interval,observed_variables_set):
                      evidence_count += 1
         feature['evidence_count'] = evidence_count
 
-def update_evidence(variables,features,var_id,evidence_interval):
+def update_evidence(variables,features,var_id_list,evidence_interval):
     '''
     update evidence_interval and evidence_count after label variables
     @param variables:
@@ -90,17 +90,19 @@ def update_evidence(variables,features,var_id,evidence_interval):
     @param evidence_interval:
     @return:
     '''
-    var_index = var_id
-    feature_set = variables[var_index]['feature_set']
-    for kv in feature_set.items():
-        if features[kv[0]]['parameterize'] == 1:
-            for interval_index in range(0, len(evidence_interval)):
-                if kv[1][1] >= evidence_interval[interval_index][0] and kv[1][1] < \
-                        evidence_interval[interval_index][1]:
-                    features[kv[0]]['evidence_interval'][interval_index].add(var_id)
-                    features[kv[0]]['evidence_count'] += 1
-        elif features[kv[0]]['parameterize'] == 0:
-            features[kv[0]]['evidence_count'] += 1
+    if type(var_id_list) != list  and type(var_id_list) != set():
+        raise ValueError('var_id_list must be list or set')
+    for var_id in var_id_list:
+        feature_set = variables[var_id]['feature_set']
+        for kv in feature_set.items():
+            if features[kv[0]]['parameterize'] == 1:
+                for interval_index in range(0, len(evidence_interval)):
+                    if kv[1][1] >= evidence_interval[interval_index][0] and kv[1][1] < \
+                            evidence_interval[interval_index][1]:
+                        features[kv[0]]['evidence_interval'][interval_index].add(var_id)
+                        features[kv[0]]['evidence_count'] += 1
+            elif features[kv[0]]['parameterize'] == 0:
+                features[kv[0]]['evidence_count'] += 1
 
 
 def init_bound(variables,features):
@@ -111,7 +113,7 @@ def init_bound(variables,features):
     @return:
     '''
     for feature in features:
-        if features['parameterize'] == 1:
+        if feature['parameterize'] == 1:
             feature_evidence0_count = 0
             feature_evidence1_count = 0
             feature_evidence0_sum = 0
@@ -135,7 +137,7 @@ def init_bound(variables,features):
             feature['alpha_bound'] = copy([bound0,bound1])
             feature['tau_bound'] = copy([0,10])
 
-def update_bound(variables,features,var_id):
+def update_bound(variables,features,var_id_list):
     '''
     update tau and alpha bound after label variables
     @param variables:
@@ -143,32 +145,35 @@ def update_bound(variables,features,var_id):
     @param var_id:
     @return:
     '''
-    feature_set = variables[var_id]['feature_set']
-    for feature_id in feature_set.keys():
-        if features[feature_id]['parameterize'] == 1:
-            feature_evidence0_count = 0
-            feature_evidence1_count = 0
-            feature_evidence0_sum = 0
-            feature_evidence1_sum = 0
-            weight = features[feature_id]['weight']
-            for vid in weight.keys():
-                if variables[vid]['is_evidence'] == True:
-                    if variables[vid]['label'] == 0:
-                        feature_evidence0_count += 1
-                        feature_evidence0_sum += weight[vid][1]
-                    elif variables[vid]['label'] == 1:
-                        feature_evidence1_count += 1
-                        feature_evidence1_sum += weight[vid][1]
-            if feature_evidence0_count != 0:
-                bound0 = feature_evidence0_sum / feature_evidence0_count
-            else:
-                bound0 = 0
-            if feature_evidence1_count != 0:
-                bound1 = feature_evidence1_sum / feature_evidence1_count
-            else:
-                bound1 = 0
-            features[feature_id]['alpha_bound'] = copy([bound0, bound1])
-            features[feature_id]['tau_bound'] = copy([-10, 10])
+    if type(var_id_list) != list  and type(var_id_list) != set():
+        raise ValueError('var_id_list must be list or set')
+    for var_id in var_id_list:
+        feature_set = variables[var_id]['feature_set']
+        for feature_id in feature_set.keys():
+            if features[feature_id]['parameterize'] == 1:
+                feature_evidence0_count = 0
+                feature_evidence1_count = 0
+                feature_evidence0_sum = 0
+                feature_evidence1_sum = 0
+                weight = features[feature_id]['weight']
+                for vid in weight.keys():
+                    if variables[vid]['is_evidence'] == True:
+                        if variables[vid]['label'] == 0:
+                            feature_evidence0_count += 1
+                            feature_evidence0_sum += weight[vid][1]
+                        elif variables[vid]['label'] == 1:
+                            feature_evidence1_count += 1
+                            feature_evidence1_sum += weight[vid][1]
+                if feature_evidence0_count != 0:
+                    bound0 = feature_evidence0_sum / feature_evidence0_count
+                else:
+                    bound0 = 0
+                if feature_evidence1_count != 0:
+                    bound1 = feature_evidence1_sum / feature_evidence1_count
+                else:
+                    bound1 = 0
+                features[feature_id]['alpha_bound'] = copy([bound0, bound1])
+                features[feature_id]['tau_bound'] = copy([-10, 10])
 
 def entropy(probability):
     '''

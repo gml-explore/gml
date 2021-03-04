@@ -3,7 +3,6 @@ from collections import namedtuple
 import logging
 from numbskull_extend.numbskulltypes import *
 
-    
 class ConstructSubgraph:
 
     def __init__(self, variables, features,balance):
@@ -155,7 +154,6 @@ class ConstructSubgraph:
                 sample_index += 1
             #目标隐变量添加在最后
             sample_list[sample_num-1]['vid'] = var_id
-
         # 初始化wmap(WeightToFactor))和wfactor(FactorToWeight),用于批量梯度下降
         wmap = np.zeros(len(weight), WeightToFactor)  #用于查找每一个weight关联的所有factor
         wfactor = np.zeros(len(factor), FactorToWeight)  # 按weight顺序组织的factor
@@ -169,7 +167,7 @@ class ConstructSubgraph:
                 count += 1
                 wfactor_index += 1
             wmap[weightId]["weight_index_length"] = count
-        logging.info("construct subgraph for mixture succeed")
+        logging.info("construct subgraph  finished")
         return weight, variable, factor, fmap, domain_mask, edges_num, var_map, alpha_bound, tau_bound, weight_map_feature, sample_list, wmap, wfactor
 
     def construct_subgraph_for_mixture(self,evidences,var_id):

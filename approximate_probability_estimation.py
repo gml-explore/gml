@@ -1,5 +1,4 @@
 import logging
-
 import gml_utils
 from pyds import MassFunction
 import math
@@ -13,6 +12,7 @@ class ApproximateProbabilityEstimation:
         self.word_evi_uncer_degree = 0.4
         self.relation_evi_uncer_degree = 0.1
         self.dict_rel_weight = self.init_binary_feature_weight(2,-2)
+
 
     def init_binary_feature_weight(self,value1,value2):   #value1 = 2, value2= -2
         '''
@@ -48,7 +48,6 @@ class ApproximateProbabilityEstimation:
         elif self.variables[var_id]['label'] == 0:
             pos_prob = 1 / (1 + math.exp(weight))
         else:
-            print(var_id)
             raise ValueError('The relation does not contain labeled  .')
         return pos_prob
 

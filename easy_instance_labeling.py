@@ -8,7 +8,6 @@ class EasyInstanceLabeling:
         self.features  = features
         self.easys = easys
 
-
     def label_easy_by_file(self):
         '''根据提供的easy列表标出variables中的Easy'''
         easy_keys = ['var_id', 'label']
