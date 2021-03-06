@@ -107,4 +107,4 @@ class ApproximateProbabilityEstimation:
                     self.variables[id]['entropy'] = 0.99
         else:
             raise ValueError('input type error')
-        logging.info("approximate_probability_estimation finished")
+        logging.info("approximate_probability estimation finished")

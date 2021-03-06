@@ -4,7 +4,7 @@ import random
 
 
 class EvidenceSelect:
-    def __init__(self, variables, features, interval_evidence_count = 200, subgraph_max_num=1000,each_feature_evidence_limit = 100):
+    def __init__(self, variables, features, interval_evidence_count = 200, subgraph_max_num=3000,each_feature_evidence_limit = 2000):
         self.variables = variables  #变量集合
         self.features = features    #特征集合
         self.subgraph_max_num = subgraph_max_num    #子图允许的最大变量个数

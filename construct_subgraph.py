@@ -91,7 +91,7 @@ class ConstructSubgraph:
             vid = elem[1]
             factor[factor_index]["factorFunction"] = 9  # 选取9号因子函数
             factor[factor_index]["weightId"] = feature_map_weight[feature_id]  # 因子对应的权重id
-            factor[factor_index]["featureValue"] = 1  #因子特征值
+            factor[factor_index]["featureValue"] = 1  #用来放大或者缩小因子的权重，默认为1，即不放大也不缩小
             factor[factor_index]["arity"] = 2  # 双因子度为2
             factor[factor_index]["ftv_offset"] = fmp_index  #偏移量每次加2
             weight_map_factor[feature_map_weight[feature_id]].add(factor_index)
@@ -112,18 +112,19 @@ class ConstructSubgraph:
             label1_var = list()
             poential_var = list()  #子图中不止存在一个隐变量
             for id in range(0,var_num):
-                if variable[id]['initialValue'] == 0:
+                if variable[id]['isEvidence'] == True and variable[id]['initialValue'] == 0:
                     label0_var.append(id)
-                elif variable[id]['initialValue'] == 1:
+                elif variable[id]['isEvidence'] == True and variable[id]['initialValue'] == 1:
                     label1_var.append(id)
-                elif id != var_id:
+                #隐变量不参与平衡化
+                elif variable[id]['isEvidence'] == False and id != var_map[var_id]:
                     poential_var.append(id)
             if len(label0_var)>=len(label1_var):
                 extend_1 = True
                 diff = len(label0_var)-len(label1_var)
             else:
-                diff = len(label1_var) - len(label0_var)
                 extend_1 = False
+                diff = len(label1_var) - len(label0_var)
             #sample_num = len(label1_var) + len(label0_var) + diff + 1+len(poential_var)
             sample_num = len(connected_var_set)+diff
             index_list = [x for x in range(0,sample_num-1)]
@@ -140,10 +141,12 @@ class ConstructSubgraph:
                 sample_index += 1
             #扩充差异的部分
             if diff>0:
+                #扩充1
                 if extend_1:
                    for i in range(0,diff):
                        sample_list[index_list[sample_index]]['vid'] = random.choice(label1_var)
                        sample_index += 1
+                #扩充0
                 elif not extend_1:
                     for i in range(0, diff):
                         sample_list[index_list[sample_index]]['vid'] = random.choice(label0_var)
@@ -153,7 +156,9 @@ class ConstructSubgraph:
                 sample_list[index_list[sample_index]]['vid'] = id
                 sample_index += 1
             #目标隐变量添加在最后
-            sample_list[sample_num-1]['vid'] = var_id
+            sample_list[sample_num-1]['vid'] = var_map[var_id]
+        else:
+            sample_list = None
         # 初始化wmap(WeightToFactor))和wfactor(FactorToWeight),用于批量梯度下降
         wmap = np.zeros(len(weight), WeightToFactor)  #用于查找每一个weight关联的所有factor
         wfactor = np.zeros(len(factor), FactorToWeight)  # 按weight顺序组织的factor
@@ -347,7 +352,6 @@ class ConstructSubgraph:
             fmp_index += 1
             factor_index += 1
             edge_index += 1
-
         if self.balance:
             #生成sampleList用于平衡化
             label0_var = list()
@@ -390,8 +394,8 @@ class ConstructSubgraph:
                         sample_index += 1
             #添加隐变量
             sample_list[sample_num-1]['vid'] = poential_var
-        logging.info("construct subgraph for unaryPara succeed")
-
+        else:
+            sample_list = None
         #初始化wmap(WeightToFactor))和wfactor(FactorToWeight),用于批量梯度下降
         wfactor_index = 0
         for weightId, factorSet in weight_dict.items():
@@ -403,13 +407,5 @@ class ConstructSubgraph:
                 count += 1
                 wfactor_index += 1
             wmap[weightId]["weight_index_length"] = count
+        logging.info("construct subgraph for unaryPara succeed")
         return weight, variable, factor, fmap,domain_mask, edges_num, var_map,alpha_bound,tau_bound,weight_map,sample_list,wmap,wfactor
-
-    def construct_subgraph_for_custom(self, evidences,var_id):
-        '''
-        用户自定义建子图的方法
-        :param var_id:
-        :param evidences:
-        :return:
-        '''
-        pass

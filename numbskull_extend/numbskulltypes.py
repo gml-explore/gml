@@ -46,7 +46,7 @@ AlphaBound = np.dtype([("lowerBound", np.float64),
 TauBound =  np.dtype([("lowerBound", np.float64),
                     ("upperBound", np.float64)])
 
-SampleList = np.dtype([("vid", np.int64)])
+SampleList = np.dtype([("vid", np.int64)])   #存放平衡化时打乱顺序的变量ID
 
 
 #记录每个weight拥有的factor在FactorToWeight中的偏移位置和长度

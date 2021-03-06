@@ -163,6 +163,7 @@ class GML:
         weight, variable, factor, fmap, domain_mask, edges_num, var_map,alpha_bound,tau_bound,weight_map_feature,sample_list,wmap,wfactor = self.subgraph.construct_subgraph(evidences,var_id)
         return weight, variable, factor, fmap, domain_mask, edges_num, var_map,alpha_bound,tau_bound,weight_map_feature,sample_list,wmap,wfactor
 
+
     def inference_subgraph(self, var_id):
         '''
         subgraph learning and inference
