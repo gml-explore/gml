@@ -85,7 +85,6 @@ class ApproximateProbabilityEstimation:
                         if self.features[fid]['parameterize']  == 1 : #如果需要参数化
                             if self.features[fid]['regression'].regression is not None and self.features[fid]['regression'].variance > 0 :
                                 mass_functions.append(self.construct_mass_function_for_ER(self.features[fid]['regression'].regression.coef_[0][0],self.features[fid]['regression'].regression.intercept_[0],self.variables[id]['feature_set'][fid][0],self.variables[id]['feature_set'][fid][1]))
-                                print(self.features[fid]['regression'].regression.coef_[0][0],self.features[fid]['regression'].regression.intercept_[0],self.variables[id]['feature_set'][fid][0],self.variables[id]['feature_set'][fid][1])
                         else:
                             if len(self.variables[id]['unary_feature_evi_prob']) > 0:
                                 for (feature_id,feature_name,n_samples,neg_prob,pos_prob) in self.variables[id]['unary_feature_evi_prob']:

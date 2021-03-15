@@ -83,7 +83,8 @@ class EvidentialSupport:
         self.effective_training_count_threshold = 2
         self.word_evi_uncer_degree = 0.4
         self.relation_evi_uncer_degree = 0.1
-        self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(self.variables)
+        self.observed_variables_set = set()
+        self.poential_variables_set = set()
 
 
     def get_unlabeled_var_feature_evi(self):
@@ -99,7 +100,7 @@ class EvidentialSupport:
             for (feature_id,value) in self.variables[id]['feature_set'].items():
                 feature_name = self.features[feature_id]['feature_name']
                 weight = self.features[feature_id]['weight']
-                if self.features[feature_id]['feature_type'] == 'unary_feature':
+                if self.features[feature_id]['feature_type'] == 'unary_feature' and self.features[feature_id]['parameterize'] == 0:
                     labeled0_vars_num = 0
                     labeled1_vars_num = 0
                     for var_id in weight:
@@ -113,7 +114,7 @@ class EvidentialSupport:
                     neg_prob = float(labeled0_vars_num/n_samples)
                     pos_prob = float(labeled1_vars_num/n_samples)
                     unary_feature_evi_prob.append((feature_id,feature_name,n_samples,neg_prob,pos_prob))
-                elif self.features[feature_id]['feature_type'] == 'binary_feature':
+                elif self.features[feature_id]['feature_type'] == 'binary_feature' and self.features[feature_id]['parameterize'] == 0 :
                     for (id1,id2) in weight:
                         anotherid = id1 if id1!=id else id2
                         if self.variables[anotherid]['is_evidence'] == True:
@@ -200,11 +201,6 @@ class EvidentialSupport:
         self.data_matrix=csr_matrix((data, (row, col)), shape=(var_len, fea_len))
         self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(self.variables)
         self.separate_feature_value()
-        if update_feature_set == None or (type(update_feature_set) == set() and len(update_feature_set) == 0):
-            update_feature_set = set()
-            for fid, feature in enumerate(self.features):
-                if feature['parameterize'] == 1:
-                    update_feature_set.add(fid)
         self.influence_modeling(update_feature_set)
         coo_data = self.data_matrix.tocoo()
         row, col, data = coo_data.row, coo_data.col, coo_data.data
@@ -276,7 +272,7 @@ class EvidentialSupport:
                             if len(var['unary_feature_evi_prob']) > 0:
                                 for (feature_id, feature_name, n_samples, neg_prob, pos_prob) in var['unary_feature_evi_prob']:
                                     mass_functions.append(self.construct_mass_function_for_propensity(self.word_evi_uncer_degree, max(pos_prob, neg_prob),min(pos_prob, neg_prob)))
-                if self.features[fid]['feature_type'] == 'binary_feature':               
+                if self.features[fid]['feature_type'] == 'binary_feature':
                     if 'binary_feature_evi' in var:
                         if len(var['binary_feature_evi']) > 0:
                             for (anotherid, feature_name, feature_id) in var['binary_feature_evi']:

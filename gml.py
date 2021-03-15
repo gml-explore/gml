@@ -1,7 +1,6 @@
 import heapq
 import pickle
 import time
-from copy import copy
 from numbskull_extend import numbskull
 import logging
 from sklearn import metrics
@@ -284,7 +283,7 @@ class GML:
         pool = ProcessPoolExecutor(self.nprocess)
         if self.update_proportion > 0:
             update_cache = int(self.update_proportion * len(self.poential_variables_set))  # 每推理update_cache个变量后需要重新计算evidential support
-        self.evidential_support(self.poential_variables_set, None)
+        self.evidential_support(self.poential_variables_set, self.all_feature_set)
         self.approximate_probability_estimation(self.poential_variables_set)
         # If the entropy is less than a certain threshold, mark it directly without reasoning
         if self.optimization_threshold >=0 and self.optimization_threshold <1:

@@ -19,72 +19,70 @@ class EvidenceSelect:
         connected_feature_set = set() 子图特征(因子)集合
         '''
         if type(var_id) == int:
-            #subgraph_max_num = (int)(len(self.variables)*self.subgraph_ratio)
             subgraph_max_num = self.subgraph_max_num
-            random_sample_num = self.each_feature_evidence_limit  #没有feratureValue时每个单因子要采样的证据数目
-            connected_var_set = set()  #最后再添加隐变量id
-            connected_edge_set = set()   #[feature_id,var_id]
+            random_sample_num = self.each_feature_evidence_limit  # 没有feratureValue时每个单因子要采样的证据数目
+            connected_var_set = set()  # 最后再添加隐变量id
+            connected_edge_set = set()  # [feature_id,var_id]
             connected_feature_set = set()
             feature_set = self.variables[var_id]['feature_set']
             binary_feature_set = set()
             unary_feature_set = set()
-            potential_var_set = set()
-            #划分此隐变量的双因子和单因子
+            # potential_var_set = set()
+            current_var_set = set() #当前hop的基础变量
+            current_var_set.add(var_id)
+            next_var_set = set()
+            k_hop = 2
+            # 划分此隐变量的双因子和单因子
             for feature_id in feature_set.keys():
                 if self.features[feature_id]['feature_type'] == 'binary_feature':
                     binary_feature_set.add(feature_id)
                 elif self.features[feature_id]['feature_type'] == 'unary_feature':
                     unary_feature_set.add(feature_id)
-            #1.先处理双因子:选取此隐变量第一跳所有双因子另一端的证据变量，以及双因子另一端隐变量的双因子的证据变量
-            for feature_id in binary_feature_set:
-                weight = self.features[feature_id]['weight']
-                for id in weight.keys():
-                    if type(id) == tuple and var_id in id:
-                        another_var_id = id[0] if id[0] != var_id else id[1]
-                        #如果另一端是证据变量则直接加进来
-                        if self.variables[another_var_id]['is_evidence'] == True:
-                            connected_var_set.add(another_var_id)
-                            connected_feature_set.add(feature_id)
-                            connected_edge_set.add((feature_id, id))   #[feature_id,(id1,id2)]
-                        #如果另一端是隐变量则先保存下来
-                        elif self.variables[another_var_id]['is_evidence'] == False:
-                            potential_var_set.add(another_var_id)
-            #连接隐变量另一端的证据变量
-            for vid in potential_var_set:
-                feature_set = self.variables[vid]['feature_set']
-                for feature_id in feature_set.keys():
-                    if self.features[feature_id]['feature_type'] == 'binary_feature':
-                        weight = self.features[feature_id]['weight']
-                        for id in weight.keys():
-                            if type(id) == tuple and vid in id:
-                                another_var_id = id[0] if id[0] != vid else id[1]
-                                # 如果另一端是证据变量则直接加进来
-                                if self.variables[another_var_id]['is_evidence'] == True:
-                                    connected_var_set.add(another_var_id)
-                                    connected_feature_set.add(feature_id)
-                                    connected_edge_set.add((feature_id, id))  # [feature_id,(id1,id2)]
-            #2.再处理单因子：限制每个单因子的证据变量数目，需要时进行采样
-            subgraph_capacity = subgraph_max_num - len(connected_var_set)-1  # 最多可再添加的变量数目
-            unary_evidence_set= set()
-            #先判断所有单因子证据加进来有没有超出最大限制
+            #处理双因子，找k-hop跳的证据变量
+            for k in range(k_hop):
+                # 每轮添加上一轮隐变量的邻接证据变量
+                for varid in current_var_set:
+                    feature_set = self.variables[varid]['feature_set']
+                    for feature_id in feature_set.keys():
+                        # relation型特征为双因子
+                        # 若此隐变量id包含在某个双因子相连的两个变量id中，且另一变量是证据变量，则将此证据变量加入下一轮next_var_set中，并且统计相关的特征和边
+                        if self.features[feature_id]['feature_type'] == 'binary_feature':
+                            weight = self.features[feature_id]['weight']
+                            for id in weight.keys():
+                                if type(id) == tuple and varid in id:
+                                    another_var_id = id[0] if id[0] != varid else id[1]
+                                    if self.variables[another_var_id]['is_evidence'] == True:
+                                        next_var_set.add(another_var_id)
+                                        connected_feature_set.add(feature_id)
+                                        connected_edge_set.add((feature_id, id))   #[feature_id,(id1,id2)]
+                    connected_var_set = connected_var_set.union(next_var_set)
+                    current_var_set = next_var_set
+                    next_var_set.clear()
+            # 处理单因子：限制每个单因子的证据变量数目，需要时进行采样
+            subgraph_capacity = subgraph_max_num - len(connected_var_set) - 1  # 最多可再添加的变量数目
+            unary_evidence_set = set()
+            unary_potential_set = set()
+            # 先判断所有单因子证据加进来有没有超出最大限制
             for feature_id in unary_feature_set:
                 weight = self.features[feature_id]['weight']
                 for vid in weight.keys():
                     if self.variables[vid]['is_evidence'] == True:
                         unary_evidence_set.add(vid)
-            #如果没有超出则全部加入
-            if len(unary_evidence_set)<= subgraph_capacity:
+                    else:
+                        unary_potential_set.add(vid)
+            # 如果没有超出子图最大容量则全部加入
+            if len(unary_evidence_set) <= subgraph_capacity:
                 for feature_id in unary_feature_set:
                     weight = self.features[feature_id]['weight']
                     for vid in weight.keys():
                         if self.variables[vid]['is_evidence'] == True:
                             connected_var_set.add(vid)
                             connected_feature_set.add(feature_id)
-                            connected_edge_set.add((feature_id, vid))  #[feature_id,id1]
-            #如果超出，则限制每个单因子的证据数目，按照是否有feature_value进行采样
+                            connected_edge_set.add((feature_id, vid))  # [feature_id,id1]
+            # 如果超出，则限制每个单因子的证据数目，按照是否有feature_value进行采样
             if len(unary_evidence_set) > subgraph_capacity:
                 for feature_id in unary_feature_set:
-                    #有feature_value的按照区间采样
+                    # 有feature_value的按照区间采样
                     if self.features[feature_id]['parameterize'] == 1:
                         if self.features[feature_id]['evidence_count'] > 0 and self.features[feature_id]['monotonicity'] == True:
                             connected_feature_set.add(feature_id)
@@ -100,12 +98,12 @@ class EvidenceSelect:
                                     sample = random.sample(list(interval), self.interval_evidence_count)
                                     connected_var_set = connected_var_set.union(sample)
                                     for vid in sample:
-                                        connected_edge_set.add((feature_id, vid))
-                    #没有feature_value的随机采样
+                                        connected_edge_set.add((feature_id, vid))     #(feature_id,v_id)
+                    # 没有feature_value的随机采样
                     if self.features[feature_id]['parameterize'] == 0 and self.features[feature_id]['evidence_count'] > 0:
                         connected_feature_set.add(feature_id)
                         weight = self.features[feature_id]['weight']
-                        unary_feature_evidence = set() #此特征上连接的所有证据变量的集合
+                        unary_feature_evidence = set()  # 此特征上连接的所有证据变量的集合
                         for vid in weight.keys():
                             if self.variables[vid]['is_evidence'] == True:
                                 unary_feature_evidence.add(vid)
@@ -114,11 +112,37 @@ class EvidenceSelect:
                         unary_feature_evidence.clear()
                         for vid in sample:
                             connected_edge_set.add((feature_id, vid))
-            #添加目标隐变量相关结构
+            #如果子图太小，只考虑没有参数化，则添加单因子上的隐变量，
+            subgraph_capacity = subgraph_max_num - len(connected_var_set) - 1
+            unary_connected_unlabeled_var = list()
+            unary_connected_unlabeled_edge = list()
+            unary_connected_unlabeled_feature = list()
+            feature_set = self.variables[var_id]['feature_set']
+            for feature_id in feature_set.keys():
+                if self.features[feature_id]['feature_type'] == 'unary_feature' and self.features[feature_id]['parameterize'] == 0:
+                    weight = self.features[feature_id]['weight']
+                    for id in weight.keys():
+                        # 先求出证据变量和隐变量的集合，包括相关的边和特征
+                        if self.variables[id]['is_evidence'] == False:
+                            unary_connected_unlabeled_var.append(id)
+                            unary_connected_unlabeled_feature.append(feature_id)
+                            unary_connected_unlabeled_edge.append((feature_id, id))
+            if (subgraph_capacity > len(unary_connected_unlabeled_var)):
+                connected_var_set = connected_var_set.union(set(unary_connected_unlabeled_var))
+                connected_feature_set = connected_feature_set.union((set(unary_connected_unlabeled_feature)))
+                connected_edge_set = connected_edge_set.union(set(unary_connected_unlabeled_edge))
+            else:
+                connected_var_set = connected_var_set.union(
+                    set(unary_connected_unlabeled_var[:subgraph_capacity - len(unary_connected_unlabeled_var)]))
+                connected_feature_set = connected_feature_set.union(
+                    set(unary_connected_unlabeled_feature[:subgraph_capacity - len(unary_connected_unlabeled_var)]))
+                connected_edge_set = connected_edge_set.union(
+                    set(unary_connected_unlabeled_edge[:subgraph_capacity - len(unary_connected_unlabeled_var)]))
+            # 添加目标隐变量相关结构
             connected_var_set.add(var_id)
             for feature_id in unary_feature_set:
                 if self.features[feature_id]['evidence_count'] > 0:
-                    connected_edge_set.add((feature_id,var_id))
+                    connected_edge_set.add((feature_id, var_id))
             logging.info("select evidence finished")
             return connected_var_set, connected_edge_set, connected_feature_set
         else:
