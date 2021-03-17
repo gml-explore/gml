@@ -16,17 +16,19 @@ class GML:
     '''
      GML main process: evidentail support->select_topm->ApproximateProbabilityEstimation->select->topk->inference->label->score
     '''
-    def __init__(self,variables, features, learning_method,top_m=2000, top_k=10, top_n = 1,update_proportion= 0.01, balance=False,optimization_threshold = 1e-6,learning_epoches = 1000,inference_epoches = 1000,nprocess=1):
+    def __init__(self,variables, features, learning_method,top_m, top_k, top_n,update_proportion, balance,optimization_threshold,learning_epoches,inference_epoches ,nprocess,out):
         #check data
         variables_keys= ['var_id','is_easy','is_evidence','true_label','label','feature_set']
         features_keys = ['feature_id','feature_type','parameterize','feature_name','weight']
         learning_methods = ['sgd', 'bgd'] # now support sgd and bgd
         if learning_method not in learning_methods:
             raise ValueError('learning_methods has no this method: '+learning_method)
+        #check variables
         for variable in variables:
             for attribute in variables_keys:
                 if attribute not in variable:
                     raise ValueError('variables has no key: '+attribute)
+        #check features
         for feature in features:
             for attribute in features_keys:
                 if attribute not in feature:
@@ -47,17 +49,20 @@ class GML:
         self.learing_epoches = learning_epoches
         self.inference_epoches = inference_epoches
         self.nprocess = nprocess
+        self.out = out
         self.evidence_interval_count = 10
         self.all_feature_set = set([x for x in range(0,len(features))])
         self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(variables)
-        # 初始化一些必需的属性
+        #Initialize the necessary properties
         self.evidence_interval = gml_utils.init_evidence_interval(self.evidence_interval_count) #均匀划分区间
         gml_utils.init_bound(variables,features)
         gml_utils.init_evidence(features,self.evidence_interval,self.observed_variables_set)
         #save results
         self.now = str(time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time())))
-        with open(self.now+'-result.txt', 'w') as f:
-            f.write('var_id'+' '+'inferenced_probability'+' '+'inferenced_label'+' '+'ture_label'+'\n')
+        self.result = self.now+'-result.txt'
+        if self.out:
+            with open(self.result, 'w') as f:
+                f.write('var_id'+' '+'inferenced_probability'+' '+'inferenced_label'+' '+'ture_label'+'\n')
         #logging
         logging.basicConfig(
             level=logging.INFO,
@@ -74,6 +79,19 @@ class GML:
         @return:
         '''
         config = ConfigParser()
+        #Set default parameters
+        config.read_dict({'para':{'learning_method':'sgd',
+                                  'learning_epoches':'1000',
+                                  'inference_epoches':'1000',
+                                  'top_m':'2000',
+                                  'top_k':'10',
+                                  'top_n':'1',
+                                  'n_process':'1',
+                                  'update_proportion':'0.01',
+                                  'balance':'False',
+                                  'optimization_threshold':'-1',
+                                  'out':'True'}
+                          })
         config.read(configFile, encoding='UTF-8')
         learning_method = config['para']['learning_method']
         learning_epoches = int(config['para']['learning_epoches'])
@@ -85,7 +103,8 @@ class GML:
         update_proportion = float(config['para']['update_proportion'])
         balance = config['para'].getboolean('balance')
         optimization_threshold = float(config['para']['optimization_threshold'])
-        return GML(variables, features, learning_method, top_m, top_k, top_n,update_proportion,balance,optimization_threshold,learning_epoches,inference_epoches,n_process)
+        out = config['para'].getboolean('out')
+        return GML(variables, features, learning_method, top_m, top_k, top_n,update_proportion,balance,optimization_threshold,learning_epoches,inference_epoches,n_process,out)
 
     def evidential_support(self, variable_set,update_feature_set):
         '''
@@ -110,7 +129,7 @@ class GML:
         @param m:
         @return:
         '''
-        #如果当前隐变量数目小于m,直接返回隐变量列表
+        #If the current number of hidden variables is less than m, directly return to the hidden variable list
         if m > len(self.poential_variables_set):
            return list(self.poential_variables_set)
         poential_var_list = list()
@@ -130,7 +149,7 @@ class GML:
         @param k:
         @return:
         '''
-        #如果隐变量数目小于k,直接返回隐变量列表
+        #If the number of hidden variables is less than k, return the hidden variable list directly
         if len(var_id_list) < k:
             return var_id_list
         m_list = list()
@@ -145,7 +164,7 @@ class GML:
 
     def evidence_select(self, var_id):
         '''
-        select evidence for construct subgraph
+        Determine the subgraph structure
         @param var_id:
         @return:
         '''
@@ -154,7 +173,7 @@ class GML:
 
     def construct_subgraph(self, var_id):
         '''
-        construct_subgraph
+        Construct subgraphs according to numbskull requirements
         @param var_id:
         @return:
         '''
@@ -165,7 +184,7 @@ class GML:
 
     def inference_subgraph(self, var_id):
         '''
-        subgraph learning and inference
+        Subgraph parameter learning and reasoning
         @param var_id:
         @return:
         '''
@@ -181,7 +200,7 @@ class GML:
             truncation=10,
             quiet=(not False),
             verbose=False,
-            learn_non_evidence=True,  # need to test
+            learn_non_evidence=True,
             sample_evidence=False,
             burn_in=10,
             nthreads=1,
@@ -190,10 +209,10 @@ class GML:
         weight, variable, factor, fmap, domain_mask, edges_num, var_map,alpha_bound,tau_bound,weight_map_feature,sample_list,wmap,wfactor = self.construct_subgraph(var_id)
         subgraph = weight, variable, factor, fmap, domain_mask, edges_num,alpha_bound,tau_bound,sample_list,wmap,wfactor
         ns_learing.loadFactorGraph(*subgraph)
-        # 因子图参数学习
+        # parameter learning
         ns_learing.learning()
         logging.info("subgraph learning finished")
-        # 对学习到的参数进行范围控制,并将weight的isfixed属性置为true
+        # Control the range of the learned parameters and set the isfixed attribute of weight to true
         for index, w in enumerate(weight):
             feature_id = weight_map_feature[index]
             w["isFixed"] = True
@@ -205,7 +224,7 @@ class GML:
                 w['initialValue'] = theta * a* (x - b)
             else:
                 w['initialValue'] = ns_learing.factorGraphs[0].poential_weight[index]
-        # 因子图推理
+        # reasoning
         ns_inference = numbskull.NumbSkull(
             n_inference_epoch=self.learing_epoches,
             n_learning_epoch= self.inference_epoches,
@@ -216,7 +235,7 @@ class GML:
             truncation=10,
             quiet=(not False),
             verbose=False,
-            learn_non_evidence=False,  # need to test
+            learn_non_evidence=False,
             sample_evidence=False,
             burn_in=10,
             nthreads=1,
@@ -225,7 +244,7 @@ class GML:
         ns_inference.loadFactorGraph(*subgraph)
         ns_inference.inference()
         logging.info("subgraph inference finished")
-        # 写回概率到self.variables,此处P
+        # Write back the probability to self.variables
         if type(var_id) == set or type(var_id) == list:
             for id in var_id:
                 self.variables[id]['inferenced_probability'] = ns_inference.factorGraphs[0].marginals[var_map[id]]
@@ -235,7 +254,7 @@ class GML:
 
     def label(self,var_id_list):
         '''
-        label top_n poential variables
+        Select n from k inferred hidden variables for labeling
         @param var_id_list:
         @return:
         '''
@@ -245,29 +264,30 @@ class GML:
             var_index = var_id
             self.variables[var_index]['entropy'] = gml_utils.entropy(self.variables[var_index]['inferenced_probability'])
             entropy_list.append([var_id, self.variables[var_index]['entropy']])
-        #如果labelnum小于传进来的变量的个数，就选top_n个
+        #If labelnum is less than the number of variables passed in, mark top_n
         if len(var_id_list) > self.top_n:
             var = list()
             min_var_list = heapq.nsmallest(self.top_n, entropy_list, key=lambda x: x[1])  # 选出熵最小的变量
             for mv in min_var_list:
                 label_list.append(mv[0])
-        #否则标记传进来的全部变量
+        #Otherwise mark all the variables passed in
         else:
             label_list = var_id_list
         for var_index in label_list:
             self.variables[var_index]['probability'] = self.variables[var_index]['inferenced_probability']
             self.variables[var_index]['label'] = 1 if self.variables[var_index]['probability'] >= 0.5 else 0
             self.variables[var_index]['is_evidence'] = True
-            logging.info('var-' + str(var_index) + " labeled succeed---------------------------------------------")
+            logging.info('var-' + str(var_index) + " labeled succeed")
             self.poential_variables_set.remove(var_index)
             self.observed_variables_set.add(var_index)
             self.labeled_variables_set.add(var_index)
             probability = self.variables[var_index]['probability']
             label = self.variables[var_index]['label']
             true_label = self.variables[var_index]['true_label']
-            with open(self.now + '-result.txt', 'a') as f:
-                f.write(f'{var_index:7} {probability:10} {label:4} {true_label:4}')
-                f.write('\n')
+            if self.out:
+                with open(self.result, 'a') as f:
+                    f.write(f'{var_index:7} {probability:10} {label:4} {true_label:4}')
+                    f.write('\n')
         return label_list
 
 
@@ -278,16 +298,16 @@ class GML:
         '''
         labeled_var = 0
         labeled_count = 0
-        update_feature_set = set()  # 存储一轮更新期间证据支持发生变化的feature
-        inferenced_variables_id = set()  #一轮更新期间已经建立过因子图并推理的隐变量
+        update_feature_set = set()  # Stores features that have changed during a round of updates
+        inferenced_variables_id = set()  #Hidden variables that have been established and inferred during a round of update
         pool = ProcessPoolExecutor(self.nprocess)
         if self.update_proportion > 0:
-            update_cache = int(self.update_proportion * len(self.poential_variables_set))  # 每推理update_cache个变量后需要重新计算evidential support
+            update_cache = int(self.update_proportion * len(self.poential_variables_set))  # Evidential support needs to be recalculated every time update_cache variables are inferred
         self.evidential_support(self.poential_variables_set, self.all_feature_set)
         self.approximate_probability_estimation(self.poential_variables_set)
         # If the entropy is less than a certain threshold, mark it directly without reasoning
         if self.optimization_threshold >=0 and self.optimization_threshold <1:
-            with open(self.now+'-result.txt', 'a') as f:
+            with open(self.result, 'a') as f:
                 for vid in self.poential_variables_set:
                     if self.variables[vid]['entropy'] <= self.optimization_threshold:
                         self.variables[vid]['probability'] = self.variables[vid]['approximate_probability']
@@ -298,19 +318,20 @@ class GML:
                         probability = self.variables[vid]['probability']
                         label = self.variables[vid]['label']
                         true_label = self.variables[vid]['true_label']
-                        f.write(f'{vid:7} {probability:10} {label:4} {true_label:4}')
-                        f.write('\n')
+                        if self.out:
+                            f.write(f'{vid:7} {probability:10} {label:4} {true_label:4}')
+                            f.write('\n')
                         self.labeled_variables_set.add(vid)
             self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(self.variables)
             self.evidential_support(self.poential_variables_set, self.all_feature_set)
             self.approximate_probability_estimation(self.poential_variables_set)
         while len(self.poential_variables_set) > 0:
-            # update_proportion小于等于0表示每标记一次变量都需要更新evidential_support
+            # update_proportion is less than or equal to 0, which means that every time the variable is marked, the emergency_support needs to be updated.
             if self.update_proportion <= 0:
                 self.evidential_support(self.poential_variables_set, self.all_feature_set)
                 self.approximate_probability_estimation(self.poential_variables_set)
             if  self.update_proportion > 0 and labeled_var == update_cache:
-                #当标记的变量数目达到update_cache时，重新回归并计算evidential support
+                #When the number of marked variables reaches update_cache, re-regression and calculate the emergency support
                 for var_id in self.labeled_variables_set:
                     for feature_id in self.variables[var_id]['feature_set'].keys():
                         update_feature_set.add(feature_id)
@@ -322,12 +343,12 @@ class GML:
                 inferenced_variables_id.clear()
             m_list = self.select_top_m_by_es(self.top_m)
             k_list = self.select_top_k_by_entropy(m_list, self.top_k)
-            add_list = [x for x in k_list if x not in inferenced_variables_id]  #每轮推理中新增的变量
+            add_list = [x for x in k_list if x not in inferenced_variables_id]  #Added variables in each round of reasoning
             if len(add_list) > 0:
                 if (self.nprocess == 1):
                     for var_id in add_list:
                         self.inference_subgraph(var_id)
-                        # 每轮更新期间推理过的变量，因为参数没有更新，所以无需再进行推理。
+                        # For the variables that have been inferred during each round of update, because the parameters are not updated, there is no need for inference.
                         inferenced_variables_id.add(var_id)
                 else:
                     futures = []
@@ -339,11 +360,12 @@ class GML:
                         self.variables[ft.result()[0]]['inferenced_probability'] = ft.result()[1]
             label_list = self.label(k_list)
             gml_utils.update_evidence(self.variables, self.features, label_list, self.evidence_interval)
-            gml_utils.update_bound(self.variables,self.features,label_list)  # 每标记一个变量之后更新上下界
+            gml_utils.update_bound(self.variables,self.features,label_list)  #Update the upper and lower bounds after each variable is marked
             labeled_var += len(label_list)
             labeled_count += len(label_list)
             logging.info("label_count=" + str(labeled_count))
         #output results
+        self.save_results()
         self.score()
 
     def save_results(self):
@@ -358,7 +380,7 @@ class GML:
 
     def score(self):
         '''
-        calculate metrics
+        Get results, including: accuracy, precision, recall, F1 score
         :return:
         '''
         easys_pred_label = list()
@@ -372,10 +394,8 @@ class GML:
             else:
                 hards_true_label.append(var['true_label'])
                 hards_pred_label.append(var['label'])
-
         all_true_label = easys_true_label + hards_true_label
         all_pred_label = easys_pred_label + hards_pred_label
-
         print("--------------------------------------------")
         print("total:")
         print("--------------------------------------------")

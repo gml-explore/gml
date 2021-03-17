@@ -4,11 +4,11 @@ import random
 
 
 class EvidenceSelect:
-    def __init__(self, variables, features, interval_evidence_count = 200, subgraph_max_num=3000,each_feature_evidence_limit = 2000):
+    def __init__(self, variables, features, interval_evidence_limit = 200, subgraph_max_num=3000,each_feature_evidence_limit = 2000):
         self.variables = variables  #变量集合
         self.features = features    #特征集合
         self.subgraph_max_num = subgraph_max_num    #子图允许的最大变量个数
-        self.interval_evidence_count = interval_evidence_count   #，统一划分成10个区间，每个区间采样的证据变量个数
+        self.interval_evidence_limit = interval_evidence_limit   #，统一划分成10个区间，每个区间采样的证据变量个数
         self.each_feature_evidence_limit = each_feature_evidence_limit   #限制子图中每个单因子的证据变量数目
 
     def evidence_select(self, var_id):
@@ -89,13 +89,13 @@ class EvidenceSelect:
                             evidence_interval = self.features[feature_id]['evidence_interval']
                             for interval in evidence_interval:
                                 # 如果这个区间的证据变量小于200，就全加进来
-                                if len(interval) <= self.interval_evidence_count:
+                                if len(interval) <= self.interval_evidence_limit:
                                     connected_var_set = connected_var_set.union(interval)
                                     for vid in interval:
                                         connected_edge_set.add((feature_id, vid))
                                 else:
                                     # 如果大于200,就随机采样200个
-                                    sample = random.sample(list(interval), self.interval_evidence_count)
+                                    sample = random.sample(list(interval), self.interval_evidence_limit)
                                     connected_var_set = connected_var_set.union(sample)
                                     for vid in sample:
                                         connected_edge_set.add((feature_id, vid))     #(feature_id,v_id)
@@ -112,7 +112,7 @@ class EvidenceSelect:
                         unary_feature_evidence.clear()
                         for vid in sample:
                             connected_edge_set.add((feature_id, vid))
-            #如果子图太小，只考虑没有参数化，则添加单因子上的隐变量，
+            #如果子图太小，则添加单因子上的隐变量(只针对未参数化的单因子)
             subgraph_capacity = subgraph_max_num - len(connected_var_set) - 1
             unary_connected_unlabeled_var = list()
             unary_connected_unlabeled_edge = list()
