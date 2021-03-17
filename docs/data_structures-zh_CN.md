@@ -38,7 +38,8 @@ feature
 *    *'feature_type'*: 此特征是单因子特征还是双因子特征，目前支持unary_feature和binary_feature两种            
 *    *'feature_name'*: 特征名，可选 
 *    *'alpha_bound'*:[bound0,bound1] alpha的上下界  
-*    *'tau_bound'*:[bound0,bound1] tau的上下界                        
+*    *'tau_bound'*:[bound0,bound1] tau的上下界       
+*    *'parameterize'*:int型，指示该类型特征是否参数化                    
 *    *'weight'*:  此特征的所有相关变量信息                                                                 
     {            
       var_id1:        [weight_value1,feature_value1],                         

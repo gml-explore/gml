@@ -21,7 +21,7 @@ class **ApproximateProbabilityEstimation**(variables, features, method) [[source
 
     >功能：基于（D-S）理论衡量证据支持  
     >参数：  
-    > · mass_functions - ？  
+    > · mass_functions -   
     >返回值：证据支持量  
     >返回类型：浮点数
 
@@ -34,9 +34,9 @@ class **ApproximateProbabilityEstimation**(variables, features, method) [[source
     >返回值：具有某feature的已标记实例中正实例的比例  
     >返回类型：浮点数  
 
-4. construct_mass_function_for_confict(uncertain_degree, pos_prob, neg_prob) [[source]](../approximate_probability_estimation.py) 
+4. construct_mass_function_for_mixture(uncertain_degree, pos_prob, neg_prob) [[source]](../approximate_probability_estimation.py) 
 
-    >功能：计算与某未标记变量相连的每个特征的证据支持  
+    >功能：构造massfunction,计算与某未标记变量相连的每个特征的证据支持  
     >参数：  
     > · uncertain_degree - 某特征的不确定性  
     > · pos_prob - 对已标记实例的证据支持  
@@ -44,19 +44,35 @@ class **ApproximateProbabilityEstimation**(variables, features, method) [[source
     >返回值：MassFunction函数  
     >返回类型：函数
 
-5. approximate_probability_estimation_by_interval(variable_set) [[source]](../approximate_probability_estimation.py)          
+5. construct_mass_function_for_unary_feature(alpha,tau,featureValue) [[source]](../approximate_probability_estimation.py) 
 
-    >功能：计算选出的topm个隐变量的近似概率，用于选topk,适用于ER  
+    >功能：构造massfunction,计算与某未标记变量相连的每个特征的证据支持  
+    >参数：  
+    > · alpha - 针对单因子线性回归后的参数  
+    > · tau - 针对单因子线性回归后的参数
+    > · featureValue - 特征值
+    >返回值：MassFunction函数  
+    >返回类型：函数
+
+6. approximate_probability_estimation_for_unary_feature(variable_set) [[source]](../approximate_probability_estimation.py)          
+
+    >功能：计算选出的topm个隐变量的近似概率，用于选topk,适用于仅含有参数化单因子的计算 
     >参数：  
     > · variable_set - 隐变量数据集
 
-6. approximate_probability_estimation_by_relation(variable_set) [[source]](../approximate_probability_estimation.py)       
+7. approximate_probability_estimation_for_unaryAndBinary_feature(variable_set) [[source]](../approximate_probability_estimation.py)       
 
-    >功能：计算选出的topm个隐变量的近似概率，用于选topk,适用于ALSA  
+    >功能：计算选出的topm个隐变量的近似概率，用于选topk,适用于含有非参数化单因子和双因子的计算  
     >参数：  
     > · variable_set - 隐变量数据集
 
-7. approximate_probability_estimation_by_custom(variable_set) [[source]](../approximate_probability_estimation.py)           
+7. approximate_probability_estimation(variable_set) [[source]](../approximate_probability_estimation.py)       
+
+    >功能：计算选出的topm个隐变量的近似概率，用于选topk,适用于含有非参数化单因子、参数化单因子和双因子的计算  
+    >参数：  
+    > · variable_set - 隐变量数据集
+
+8. approximate_probability_estimation_by_custom(variable_set) [[source]](../approximate_probability_estimation.py)           
 
     >功能：计算选出的topm个隐变量的近似概率，用于选topk,由用户自定义计算规则  
     >参数：  

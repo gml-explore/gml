@@ -9,25 +9,31 @@
 > - **k_hop** –  在情感分析任务中，挑选隐变量相邻的证据变量时，距离为k_hop跳的证据变量是相邻变量
 
 此类目前主要提供以下方法：
-
-1. select_evidence_by_interval(var_id)[[source]](../evidence_select.py)
-
-   >功能：在实体识别问题中，需要构建包含参数化的单因子的因子图，此时调用此函数。  
+1. evidence_select(var_id)[[source]](../evidence_select.py)
+   >功能：提供一种统一的证据选择方法，可用于构建包含参数化的单因子、非参数化单因子和双因子的因子图，此时调用此函数。  
    >参数：  
    > · var_id - 隐变量id  
    >返回值：connected_var_set, connected_edge_set, connected_feature_set  
    >返回类型：集合
 
-2. select_evidence_by_relation(var_id)[[source]](../evidence_select.py)
-
-   >功能：在情感分析问题中，需要构建包含单因子和双因子的因子图，此时调用此函数。  
+2. select_evidence_for_unary_feature(var_id)[[source]](../evidence_select.py)
+   >功能：当需要构建包含参数化的单因子的因子图，此时调用此函数。  
    >参数：  
    > · var_id - 隐变量id  
+   >返回值：connected_var_set, connected_edge_set, connected_feature_set  
+   >返回类型：集合
 
-3. select_evidence_by_custom(var_id)[[source]](../evidence_select.py)
+3. select_evidence_for_unaryAndBinary_feature(var_id)[[source]](../evidence_select.py)
+
+   >功能：当需要构建包含单因子和双因子的因子图，此时调用此函数。  
+   >参数：  
+   > · var_id - 隐变量id  
+   >返回值：connected_var_set, connected_edge_set, connected_feature_set  
+   >返回类型：集合
+4. select_evidence_by_custom(var_id)[[source]](../evidence_select.py)
 
    >功能：用户自定义构建因子图的函数。  
    >参数：  
    > · var_id - 隐变量id 
-
+   >返回类型：集合
 

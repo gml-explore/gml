@@ -39,27 +39,57 @@ gml is a Python package that provides for Gradual Machine Learning
  Before using this framework, you need to prepare your data according to the following [Data structure description](./docs/data_structures.md) .
 
 After preparing the data, you can use this framework as follows.
+First you need to prepare a configuration file.
+``` python 
+[para]
+dataname =dblp
+top_m = 2000 
+top_k = 10
+top_n = 1
+n_process = 1
+update_proportion = 0.01
+optimization_threshold = 1e-6
+balance = True
+optimization = True
+learning_epoches = 800
+inference_epoches = 800
+learning_method = sgd
+out = True
+```      
   ```python            
+import pickle
+import time
+import warnings
 from easy_instance_labeling import EasyInstanceLabeling
 from gml import  GML
+from gml_utils import *
 
-EasyInstanceLabeling(variables, features, easys).label_easy_by_file()
-graph = GML(
-    dataname,
-    variables,
-    features,
-    evidential_support_method='regression',
-    approximate_probability_method='interval',
-    evidence_select_method='interval',
-    construct_subgraph_method='unaryPara',
-    top_m=2000,
-    top_k=10,
-    update_proportion= 0.01,
-    balance = False,
-    optimization = True
-)
-graph.inference()
-graph.score()
+if __name__ == '__main__':
+    warnings.filterwarnings('ignore')  # 过滤掉warning输出
+    begin_time = time.time()
+    # 1.准备数据 
+    dataname = "dblp"
+    dir = '../'
+    with open(dir+"data/"+dataname+'_variables.pkl', 'rb') as v:
+        variables = pickle.load(v)
+    with open(dir+"data/"+dataname+'_features.pkl', 'rb') as f:
+        features = pickle.load(f)
+       #修正数据中乱标的错误
+    for variable in variables:
+        variable['is_evidence'] = False
+        variable['is_easy'] = False
+        variable['label'] = -1
+       #标注Easy
+    easys = load_easy_instance_from_file(dir+"data/"+dataname+"_easys.csv")
+    EasyInstanceLabeling(variables, features, easys).label_easy_by_file()
+    #2. 初始化因子图，设置参数
+    graph = GML.initial("./er.config",variables,features)
+    #3. 因子图推理
+    graph.inference()
+    #4. 输出推理用时
+    end_time = time.time()
+    print('Running time: %s Seconds' % (end_time - begin_time))
+
 ```               
 Here is an [example](examples/er_example.py) you can refer.
 ## API
@@ -119,14 +149,13 @@ Here is an [example](examples/er_example.py) you can refer.
     * [labeling_conflict_with_ds](./docs/approximate_probability_estimation.md "Evidence support based on (D-S) theory measurement")
     * [get_pos_prob_based_relation](./docs/approximate_probability_estimation.md "Calculate the proportion of positive instances in marked instances with a feature")
     * [construct_mass_function_for_confict](./docs/approximate_probability_estimation.md "Evidence support for calculating each feature connected to an unlabeled variable")
-    * [approximate_probability_estimation_by_interval](./docs/approximate_probability_estimation.md "Calculate the approximate probability of the selected topm hidden variables, used to select topk, suitable for ER")
-    * [approximate_probability_estimation_by_relation](./docs/approximate_probability_estimation.md "Calculate the approximate probability of the selected topm hidden variables, used to select topk, suitable for ALSA")
+    * [approximate_probability_estimation](./docs/approximate_probability_estimation.md "Calculate the approximate probability of the selected topm hidden variables, used to select topk")
     * [approximate_probability_estimation_by_custom](./docs/approximate_probability_estimation.md "Calculate the approximate probability of the selected topm hidden variables, used to select topk, user-defined calculation rules")
 * [class EvidenceSelect](./docs/evidence_select.md "Select evidence variables for latent variable reasoning")
-    * [select_evidence_by_interval](./docs/evidence_select.md "Select evidence variables for latent variable reasoning, suitable for ER")
-    * [select_evidence_by_relation](./docs/evidence_select.md "Select evidence variables for latent variable reasoning, suitable for ALSA")
+    * [select_evidence](./docs/evidence_select.md "Select evidence variables for latent variable reasoning")
     * [select_evidence_by_custom](./docs/evidence_select.md "Select evidence variables for hidden variable reasoning, user-defined selection method")
 * [construct_subgraph](./docs/construct_subgraph.md "Construct factor graph")
+    * [construct_subgraph](./docs/construct_subgraph.md "A unified method for constructing factor graphs")
     * [construct_subgraph_for_mixture](./docs/construct_subgraph.md "Construct factor graph, suitable for ER")
     * [construct_subgraph_for_unaryPara](./docs/construct_subgraph.md "Construct factor graphs for ALSA")
     * [construct_subgraph_for_custom](./docs/construct_subgraph.md "Construction factor graph, user-defined construction method")

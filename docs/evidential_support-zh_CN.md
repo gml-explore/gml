@@ -30,16 +30,22 @@ class **EvidentialSupport**(variables,features,method,evidence_interval_count,in
     >参数：
     > · feature_set - feature_id的集合
 
-6. evidential_support_by_regression()[[source]](../evidential_support.py)
+6. evidential_support_for_unary_feature()()[[source]](../evidential_support.py)
     >功能：计算所有隐变量的Evidential Support  
     >参数：  
     > · update_feature_set - 已更新的feature集合
+    > · variable_set -待计算证据支持的变量集合
 
-7. get_dict_rel_acc()[[source]](../evidential_support.py)
+7. evidential_support()[[source]](../evidential_support.py)
+    >功能：一种通过D-S理论计算所有隐变量的Evidential Support的方法。
+    >参数：  
+    > · update_feature_set - 已更新的feature集合
+    > · variable_set -待计算证据支持的变量集合
+8. get_dict_rel_acc()[[source]](../evidential_support.py)
     >功能：计算不同类型关系的准确性
 
-8. construct_mass_function_for_propensity()[[source]](../evidential_support.py)
-    >功能：构建mass function，用于Aspect-level情感分析应用中的Evidential Support计算   
+9. construct_mass_function_for_propensity()[[source]](../evidential_support.py)
+    >功能：构建mass function，用于非参数化的单因子和双因子连接变量的Evidential Support计算 （Aspect-level情感分析应用中）
     >参数：  
     > · uncertain_degree - 特征的不确定度  
     > · label_prob - 标签匹配的概率,对于词特征来说表示positive实例的比例, 对于关系特征来说表示关系特征的准确率  
@@ -47,15 +53,22 @@ class **EvidentialSupport**(variables,features,method,evidence_interval_count,in
     >返回值 : MassFunction函数  
     >返回类型 : 函数  
 
-9. labeling_propensity_with_ds()[[source]](../evidential_support.py)
+10. construct_mass_function_for_ER()[[source]](../evidential_support.py)
+    >功能：构建mass function，用于参数化的单因子连接变量的Evidential Support计算 （ER应用中）
+    >参数：  
+    > · theta - 特征的不确定度  
+    >返回值 : MassFunction函数  
+    >返回类型 : 函数  
+
+11. labeling_propensity_with_ds()[[source]](../evidential_support.py)
     >功能：对于不同类型的evidences用不同的方法进行组合，用于Aspect-level情感分析
 
-10. evidential_support_by_relation()[[source]](../evidential_support.py)
+12. evidential_support_for_unaryAndBinary_feature()[[source]](../evidential_support.py)
     >功能：计算给定隐变量集合中每个隐变量的evidential support,适用于Aspect-level情感分析  
     >参数：  
     > · variable_set - 给定隐变量的集合
 
-11. evidential_support_by_custom()[[source]](../evidential_support.py)
+13. evidential_support_by_custom()[[source]](../evidential_support.py)
     >功能：用户自定义用于计算evidential support的方法  
     >参数：  
     > · variable_set - 给定隐变量的集合

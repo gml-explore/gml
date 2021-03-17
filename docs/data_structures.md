@@ -37,6 +37,9 @@ feature
 *    *'feature_id'*: The id of this feature, int type, counting from 0      
 *    *'feature_type'*: Whether this feature is a single factor feature or a dual factor feature, currently supports both unary_feature and binary_feature            
 *    *'feature_name'*: Feature name, optional              
+*    *'alpha_bound'*:[bound0,bound1] alpha's Upper and lower bounds  
+*    *'tau_bound'*:[bound0,bound1] tau's Upper and lower bounds      
+*    *'parameterize'*:type of int , indicating whether the feature of this type is parameterized     
 *    *'weight'*:  Information about all relevant variables of this feature                                                               
     {            
       var_id1:        [weight_value1,feature_value1],                         
