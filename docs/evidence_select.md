@@ -9,25 +9,33 @@ the class for selecting evidence, select evidential variables for latent variabl
 > - **k_hop** –  In the sentiment analysis task, when selecting evidential variables that are adjacent to the latent   variable, the evidential variable whose distance does not exceed k_hop is the adjacent variable
 
 This class currently provides the following methods：
-
-1. select_evidence_by_interval(var_id)[[source]](../evidence_select.py)
-
-   >Function: In the entity identification problem, it is necessary to construct a factor graph containing parameterized unary factors, and this function is called at this time.  
+1. evidence_select(var_id)[[source]](../evidence_select.py)
+   >Function: Provide a unified evidence selection method, which can be used to construct factor graphs containing parameterized single factor, non-parameterized single factor, and double factor. In this case, call this function.
    >Parameters：  
    > · var_id - the id of latent variable  
    >Return：connected_var_set, connected_edge_set, connected_feature_set  
    >Return type：set
 
-2. select_evidence_by_relation(var_id)[[source]](../evidence_select.py)
+2. select_evidence_for_unary_feature(var_id)[[source]](../evidence_select.py)
 
-   >Function：In the sentiment analysis problem, it is necessary to construct a factor graph containing unary factors and binary factors, and this function is called at this time.  
+   >Function: It is necessary to construct a factor graph containing parameterized unary factors, and this function is called at this time.  
+   >Parameters：  
+   > · var_id - the id of latent variable  
+   >Return：connected_var_set, connected_edge_set, connected_feature_set  
+   >Return type：set
+
+3. select_evidence_for_unaryAndBinary_feature(var_id)[[source]](../evidence_select.py)
+
+   >Function：It is necessary to construct a factor graph containing unary factors and binary factors, and this function is called at this time.  
    >Parameters：  
    > · var_id - the id of latent variable
-
-3. select_evidence_by_custom(var_id)[[source]](../evidence_select.py)
+   >Return：connected_var_set, connected_edge_set, connected_feature_set  
+   >Return type：set
+4. select_evidence_by_custom(var_id)[[source]](../evidence_select.py)
 
    >Function：User-defined functions for constructing factor graphs.
    >Parameters：  
    > · var_id - the id of latent variable 
+   >Return type：set
 
 

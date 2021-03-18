@@ -21,7 +21,7 @@ This class currently provides the following methods:
 
     >Function：based on (D-S) theory Evidence support measurement  
     >Parameters：  
-    > · mass_functions - ？  
+    > · mass_functions - 
     >Returns：Evidence support value  
     >Return type：float
 
@@ -34,29 +34,38 @@ This class currently provides the following methods:
     >Returns：Proportion of positive instances in marked instances with a feature  
     >Return type：float  
 
-4. construct_mass_function_for_confict(uncertain_degree, pos_prob, neg_prob) [[source]](../approximate_probability_estimation.py) 
+4. construct_mass_function_for_mixture(uncertain_degree, pos_prob, neg_prob) [[source]](../approximate_probability_estimation.py) 
 
     >Function：Evidence support for calculating each feature connected to an unlabeled variable  
     >Parameters：  
-    > · uncertain_degree - Uncertainty of a feature  
-    > · pos_prob - Evidence support for marked instances  
-    > · neg_prob - Evidence support for unmarked instances  
+    > · theta - Uncertainty of a feature  
     >Returns：MassFunction function  
     >Return type：function
 
-5. approximate_probability_estimation_by_interval(variable_set) [[source]](../approximate_probability_estimation.py)          
+5. construct_mass_function_for_ER(alpha,tau,featureValue) [[source]](../approximate_probability_estimation.py) 
+
+    >Function：Evidence support for calculating each feature connected to an unlabeled variable  
+    >Parameters：  
+    > · theta - Uncertainty of a feature  
+    > · alpha - Parameters after unaryfactor linear regression
+    > · tau - Parameters after unaryfactor linear regression
+    > · featureValue - featurevalue
+    >Returns：MassFunction function  
+    >Return type：function
+
+6. approximate_probability_estimation_for_unary_feature(variable_set) [[source]](../approximate_probability_estimation.py)          
 
     >Function：Calculate the approximate probability of the selected topm hidden variables, used to select topk, suitable for ER  
     >Parameters：  
     > · variable_set - Latent variable data set
 
-6. approximate_probability_estimation_by_relation(variable_set) [[source]](../approximate_probability_estimation.py)       
+7. approximate_probability_estimation_for_unaryAndBinary_feature(variable_set) [[source]](../approximate_probability_estimation.py)       
 
     >Function：Calculate the approximate probability of the selected topm hidden variables, used to select topk, suitable for ALSA 
     >Parameters：  
     > · variable_set - Latent variable data set
 
-7. approximate_probability_estimation_by_custom(variable_set) [[source]](../approximate_probability_estimation.py)           
+8. approximate_probability_estimation_by_custom(variable_set) [[source]](../approximate_probability_estimation.py)           
 
     >Function：Calculate the approximate probability of the selected topm hidden variables, used to select topk, user-defined calculation rules  
     >Parameters：  

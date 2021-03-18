@@ -29,33 +29,45 @@ This class currently provides the following methods：
     >Function: calculate tau and alpha for feature  
     >Parameter：
     > · feature_set - the set of feature_id
-
-6. evidential_support_by_regression()[[source]](../evidential_support.py)
+6. evidential_support_for_unary_feature()[[source]](../evidential_support.py)
+    >Function: calculate the essential support of each latent variable in a given set of latent variables, suitable for Aspect-level sentiment analysis 
+    >Parameter：  
+    > · variable_set - a set of latent variables
+    
+7. evidential_support()[[source]](../evidential_support.py)
     >Function: Calculate the Evidential Support of all latent variables
     >Parameter：  
     > · update_feature_set - the set of updated feature
+    > · variable_set -The set of variables to be calculated  the evidence support.
 
-7. get_dict_rel_acc()[[source]](../evidential_support.py)
+8. get_dict_rel_acc()[[source]](../evidential_support.py)
     >Function: Calculate the accuracy of different types of relationships
 
-8. construct_mass_function_for_propensity()[[source]](../evidential_support.py)
-    >Function: Build a mass function for Evidential Support calculation in Aspect-level sentiment analysis applications
+9. construct_mass_function_for_propensity()[[source]](../evidential_support.py)
+    >Function: Build a mass function for Evidential Support calculation 
     >Parameter：  
     > · uncertain_degree - Feature uncertainty  
     > · label_prob - The probability of label matching, which represents the proportion of positive instances for word features and the accuracy of relationship features for relationship features  
     > · unlabel_prob - The probability of label unmatch, which represents the proportion of negative instances for word features and 1 minus the accuracy of relationship features for relationship features
     >Return : MassFunction  
     >Return type : function  
+    
+10. construct_mass_function_for_ER()[[source]](../evidential_support.py)
+    >Function: Build a mass function for Evidential Support calculation 
+    >Parameter：  
+    > · theta - Feature uncertainty  
+    >Return : MassFunction  
+    >Return type : function  
 
-9. labeling_propensity_with_ds()[[source]](../evidential_support.py)
+11. labeling_propensity_with_ds()[[source]](../evidential_support.py)
     >Function: Combine different methods for different types of evidences for aspect-level sentiment analysis
 
-10. evidential_support_by_relation()[[source]](../evidential_support.py)
+12. evidential_support_for_unaryAndBinary_feature()[[source]](../evidential_support.py)
     >Function: calculate the essential support of each latent variable in a given set of latent variables, suitable for Aspect-level sentiment analysis 
     >Parameter：  
     > · variable_set - a set of latent variables
 
-11. evidential_support_by_custom()[[source]](../evidential_support.py)
+13. evidential_support_by_custom()[[source]](../evidential_support.py)
     >Function: User-defined method for calculating essential support
     >Parameter：  
     > · variable_set - a set of latent variables

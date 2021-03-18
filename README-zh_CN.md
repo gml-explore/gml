@@ -39,27 +39,57 @@ gml是为渐进机器学习提供的一个python模块
  在使用此框架之前，您需要按照以下[数据结构](./docs/data_structures-zh_CN.md)要求准备您的数据。    
  
 在准备完数据之后，您可以按照以下方式使用此框架。
-```python            
+首先需要准备一个配置文件，对一些参数和超参数进行设置。
+``` python 
+[para]
+dataname =dblp
+top_m = 2000 
+top_k = 10
+top_n = 1
+n_process = 1
+update_proportion = 0.01
+optimization_threshold = 1e-6
+balance = True
+optimization = True
+learning_epoches = 800
+inference_epoches = 800
+learning_method = sgd
+out = True
+```      
+  ```python            
+import pickle
+import time
+import warnings
 from easy_instance_labeling import EasyInstanceLabeling
 from gml import  GML
+from gml_utils import *
 
-EasyInstanceLabeling(variables, features, easys).label_easy_by_file()
-graph = GML(
-    dataname,
-    variables,
-    features,
-    evidential_support_method='regression',
-    approximate_probability_method='interval',
-    evidence_select_method='interval',
-    construct_subgraph_method='unaryPara',
-    top_m=2000,
-    top_k=10,
-    update_proportion= 0.01,
-    balance = False,
-    optimization = True
-)
-graph.inference()
-graph.score()
+if __name__ == '__main__':
+    warnings.filterwarnings('ignore')  # 过滤掉warning输出
+    begin_time = time.time()
+    # 1.准备数据 
+    dataname = "dblp"
+    dir = '../'
+    with open(dir+"data/"+dataname+'_variables.pkl', 'rb') as v:
+        variables = pickle.load(v)
+    with open(dir+"data/"+dataname+'_features.pkl', 'rb') as f:
+        features = pickle.load(f)
+       #修正数据中乱标的错误
+    for variable in variables:
+        variable['is_evidence'] = False
+        variable['is_easy'] = False
+        variable['label'] = -1
+       #标注Easy
+    easys = load_easy_instance_from_file(dir+"data/"+dataname+"_easys.csv")
+    EasyInstanceLabeling(variables, features, easys).label_easy_by_file()
+    #2. 初始化因子图，设置参数
+    graph = GML.initial("./er.config",variables,features)
+    #3. 因子图推理
+    graph.inference()
+    #4. 输出推理用时
+    end_time = time.time()
+    print('Running time: %s Seconds' % (end_time - begin_time))
+
 ```               
 这是一个您可以参考的[示例](examples/er_example.py)
 
@@ -121,14 +151,13 @@ graph.score()
     * [labeling_conflict_with_ds](./docs/approximate_probability_estimation-zh_CN.md "基于（D-S）理论衡量证据支持")
     * [get_pos_prob_based_relation](./docs/approximate_probability_estimation-zh_CN.md "计算具有某feature的已标记实例中正实例的比例")
     * [construct_mass_function_for_confict](./docs/approximate_probability_estimation-zh_CN.md "计算与某未标记变量相连的每个特征的证据支持")
-    * [approximate_probability_estimation_by_interval](./docs/approximate_probability_estimation-zh_CN.md "计算选出的topm个隐变量的近似概率，用于选topk,适用于ER")
-    * [approximate_probability_estimation_by_relation](./docs/approximate_probability_estimation-zh_CN.md "计算选出的topm个隐变量的近似概率，用于选topk,适用于ALSA")
+    * [approximate_probability_estimation](./docs/approximate_probability_estimation-zh_CN.md "计算选出的topm个隐变量的近似概率，用于选topk")
     * [approximate_probability_estimation_by_custom](./docs/approximate_probability_estimation-zh_CN.md "计算选出的topm个隐变量的近似概率，用于选topk,由用户自定义计算规则")
 * [class EvidenceSelect](./docs/evidence_select-zh_CN.md "为隐变量推理挑选证据变量")
-    * [select_evidence_by_interval](./docs/evidence_select-zh_CN.md "为隐变量推理挑选证据变量，适用于ER")
-    * [select_evidence_by_relation](./docs/evidence_select-zh_CN.md "为隐变量推理挑选证据变量，适用于ALSA")
+    * [select_evidence](./docs/evidence_select-zh_CN.md "为隐变量推理挑选证据变量，适用于ER")
     * [select_evidence_by_custom](./docs/evidence_select-zh_CN.md "为隐变量推理挑选证据变量，由用户自定义挑选方法")
 * [construct_subgraph](./docs/construct_subgraph-zh_CN.md "构建因子图")
+    * [construct_subgraph](./docs/construct_subgraph-zh_CN.md "一种统一的构建因子图的方法")
     * [construct_subgraph_for_mixture](./docs/construct_subgraph-zh_CN.md "构建因子图，适用于ER")
     * [construct_subgraph_for_unaryPara](./docs/construct_subgraph-zh_CN.md "构建因子图，适用于ALSA")
     * [construct_subgraph_for_custom](./docs/construct_subgraph-zh_CN.md "构建因子图，由用户自定义构建方法")
