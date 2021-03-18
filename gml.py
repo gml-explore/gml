@@ -68,6 +68,7 @@ class GML:
             level=logging.INFO,
             format='%(asctime)s - %(name)s - [%(levelname)s]: %(message)s'
         )
+        logging.info("GML inference begin")
 
     @staticmethod
     def initial(configFile,variables,features):
@@ -277,7 +278,7 @@ class GML:
             self.variables[var_index]['probability'] = self.variables[var_index]['inferenced_probability']
             self.variables[var_index]['label'] = 1 if self.variables[var_index]['probability'] >= 0.5 else 0
             self.variables[var_index]['is_evidence'] = True
-            logging.info('var-' + str(var_index) + " labeled succeed")
+            logging.info('var-' + str(var_index) + " labeled succeed--------------------------------------")
             self.poential_variables_set.remove(var_index)
             self.observed_variables_set.add(var_index)
             self.labeled_variables_set.add(var_index)
@@ -307,21 +308,21 @@ class GML:
         self.approximate_probability_estimation(self.poential_variables_set)
         # If the entropy is less than a certain threshold, mark it directly without reasoning
         if self.optimization_threshold >=0 and self.optimization_threshold <1:
-            with open(self.result, 'a') as f:
-                for vid in self.poential_variables_set:
-                    if self.variables[vid]['entropy'] <= self.optimization_threshold:
-                        self.variables[vid]['probability'] = self.variables[vid]['approximate_probability']
-                        self.variables[vid]['is_evidence'] = True
-                        self.variables[vid]['label'] = 1 if  self.variables[vid]['probability'] >= 0.5 else 0
-                        gml_utils.update_evidence(self.variables, self.features, [vid], self.evidence_interval)
-                        logging.info('var-'+str(vid)+' labeled succeed---------------------------------------------')
-                        probability = self.variables[vid]['probability']
-                        label = self.variables[vid]['label']
-                        true_label = self.variables[vid]['true_label']
-                        if self.out:
+            for vid in self.poential_variables_set:
+                if self.variables[vid]['entropy'] <= self.optimization_threshold:
+                    self.variables[vid]['probability'] = self.variables[vid]['approximate_probability']
+                    self.variables[vid]['is_evidence'] = True
+                    self.variables[vid]['label'] = 1 if  self.variables[vid]['probability'] >= 0.5 else 0
+                    gml_utils.update_evidence(self.variables, self.features, [vid], self.evidence_interval)
+                    logging.info('var-'+str(vid)+' labeled succeed---------------------------------------------')
+                    probability = self.variables[vid]['probability']
+                    label = self.variables[vid]['label']
+                    true_label = self.variables[vid]['true_label']
+                    if self.out:
+                        with open(self.result, 'a') as f:
                             f.write(f'{vid:7} {probability:10} {label:4} {true_label:4}')
                             f.write('\n')
-                        self.labeled_variables_set.add(vid)
+                    self.labeled_variables_set.add(vid)
             self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(self.variables)
             self.evidential_support(self.poential_variables_set, self.all_feature_set)
             self.approximate_probability_estimation(self.poential_variables_set)

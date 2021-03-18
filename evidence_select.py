@@ -139,10 +139,12 @@ class EvidenceSelect:
                 connected_edge_set = connected_edge_set.union(
                     set(unary_connected_unlabeled_edge[:subgraph_capacity - len(unary_connected_unlabeled_var)]))
             # 添加目标隐变量相关结构
-            connected_var_set.add(var_id)
-            for feature_id in unary_feature_set:
-                if self.features[feature_id]['evidence_count'] > 0:
-                    connected_edge_set.add((feature_id, var_id))
+            connected_var_set = list(connected_var_set)
+            connected_edge_set = list(connected_edge_set)
+            connected_var_set.append(var_id)
+            for feature_id in connected_feature_set:
+                if self.features[feature_id]['feature_type'] == 'unary_feature':
+                    connected_edge_set.append((feature_id, var_id))
             logging.info("select evidence finished")
             return connected_var_set, connected_edge_set, connected_feature_set
         else:
