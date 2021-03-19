@@ -42,10 +42,10 @@ After preparing the data, you can use this framework as follows.
 First you need to prepare a configuration file.
 ``` python 
 [para]
-top_m = 2000
+top_m = 2000  
 top_k = 10
 top_n = 1
-update_proportion = -1
+update_proportion = -1   
 optimization_threshold = -1
 balance = False
 learning_epoches = 500

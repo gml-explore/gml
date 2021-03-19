@@ -9,11 +9,10 @@ from pyds import MassFunction
 
 class Regression:
     '''
-    线性回归相关类，对所有feature进行线性回归
+    Calculate evidence support by linear regression
     '''
     def __init__(self, each_feature_easys, n_job,effective_training_count_threshold =2):
         '''
-        初始化
         @param each_feature_easys:
         @param n_job:
         @param effective_training_count_threshold:
@@ -38,7 +37,7 @@ class Regression:
 
     def perform(self):
         '''
-        执行线性回归
+        Perform linear regression
         @return:
         '''
         self.N = np.size(self.X)
@@ -70,12 +69,16 @@ class Regression:
 
 class EvidentialSupport:
     '''
-    Evidential Support计算类
+    Calculated evidence support
     '''
     def __init__(self,variables,features):
+        '''
+        @param variables:
+        @param features:
+        '''
         self.variables = variables
         self.features = features   #
-        self.features_easys = dict()  # 存放所有features的所有easy的featurevalue   :feature_id:[[value1,bound],[value2,bound]...]
+        self.features_easys = dict()  # Store all easy feature values of all features    :feature_id:[[value1,bound],[value2,bound]...]
         self.tau_and_regression_bound = 10
         self.NOT_NONE_VALUE = 1e-8
         self.n_job = 10
@@ -86,12 +89,12 @@ class EvidentialSupport:
         self.observed_variables_set = set()
         self.poential_variables_set = set()
 
-
     def get_unlabeled_var_feature_evi(self):
         '''
-        计算每个隐变量的每个unary feature相关联的证据变量里面0和1的比例，以及binaryfeature另一端的变量id,
-        最终向每个隐变量增加nary_feature_evi_prob和binary_feature_evi两个属性
-        :return:
+        Calculate the ratio of 0 and 1 in the evidence variable associated with each unary feature of each hidden variable,
+        and the variable id at the other end of the binary feature,
+        and finally add the two attributes of unary_feature_evi_prob and binary_feature_evi to each hidden variable
+        @return:
         '''
         self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(self.variables)
         unary_feature_evi_prob = list()
@@ -160,14 +163,22 @@ class EvidentialSupport:
 
     def construct_mass_function_for_propensity(self,uncertain_degree, label_prob, unlabel_prob):
         '''
-        # l: support for labeling
-        # u: support for unalbeling
+        l: support for labeling
+        u: support for unalbeling
+        @param uncertain_degree:
+        @param label_prob:
+        @param unlabel_prob:
+        @return:
         '''
         return MassFunction({'l': (1 - uncertain_degree) * label_prob,
                              'u': (1 - uncertain_degree) * unlabel_prob,
                              'lu': uncertain_degree})
 
     def construct_mass_function_for_para_feature(self,theta):
+        '''
+        @param theta:
+        @return:
+        '''
         return MassFunction ({'l':theta,'u':1-theta})
 
     def labeling_propensity_with_ds(self,mass_functions):
@@ -175,6 +186,11 @@ class EvidentialSupport:
         return combined_mass
 
     def computer_unary_feature_es(self,update_feature_set):
+        '''
+        Evidence support for calculating parameterized unary features
+        @param update_feature_set:
+        @return:
+        '''
         data = list()
         row = list()
         col = list()
@@ -252,7 +268,7 @@ class EvidentialSupport:
 
     def evidential_support(self,variable_set,update_feature_set):
         '''
-        计算给定隐变量集合的Evidential Support,每次只更新发证据变量发生变化的feature
+        Evidence support for fusing all factors of each latent variable ,Only update the changed features each time
         @param variable_set:
         @param update_feature_set:
         @return:
@@ -289,7 +305,7 @@ class EvidentialSupport:
 
     def separate_feature_value(self):
         '''
-        选出每个feature的easy feature value用于线性回归
+        Select the easy feature value of each feature for linear regression
         :return:
         '''
         each_feature_easys = list()
@@ -305,22 +321,21 @@ class EvidentialSupport:
 
     def influence_modeling(self,update_feature_set):
         '''
-        对已更新feature进行线性回归
+        Perform linear regression on the updated feature
         @param update_feature_set:
         @return:
         '''
         if len(update_feature_set) > 0:
             self.init_tau_and_alpha(update_feature_set)
-            #logging.info("init para finished")
             for feature_id in update_feature_set:
-                # 对于某些features_easys为空的feature,回归后regression为none
+                # For some features whose features_easys is empty, regression is none after regression
                 if self.features[feature_id]['parameterize'] == 1:
                     self.features[feature_id]['regression'] = Regression(self.features_easys[feature_id], n_job=self.n_job)
 
 
     def init_tau_and_alpha(self, feature_set):
         '''
-        对给定的feature计算tau和alpha
+        Calculate tau and alpha for a given feature
         @param feature_set:
         @return:
         '''
@@ -329,7 +344,7 @@ class EvidentialSupport:
         else:
             for feature_id in feature_set:
                 if self.features[feature_id]['parameterize'] == 1:
-                    # tau值固定为上界
+                    #tau value is fixed as the upper bound
                     self.features[feature_id]["tau"] = self.tau_and_regression_bound
                     weight = self.features[feature_id]["weight"]
                     labelvalue0 = 0
@@ -346,16 +361,15 @@ class EvidentialSupport:
                     if num0 == 0 and num1 == 0:
                         continue
                     if num0 == 0:
-                        # 如果没有和该feature相连的label0，就把值赋值为value的上界，目前先定为1
+                        # If there is no label0 connected to the feature, the value is assigned to the upper bound of value, which is currently set to 1
                         labelvalue0 = 1
                     else:
-                        # label为0的featurevalue的平均值
+                        # The average value of the feature value with a label of 0
                         labelvalue0 /= num0
                     if num1 == 0:
-                        # 同上
                         labelvalue1 = 1
                     else:
-                        # label为1的featurevalue的平均值
+                        # The average value of the feature value with label of 1
                         labelvalue1 /= num1
                     alpha = (labelvalue0 + labelvalue1) / 2
                     self.features[feature_id]["alpha"] = alpha

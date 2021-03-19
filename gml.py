@@ -20,7 +20,7 @@ class GML:
         #check data
         variables_keys= ['var_id','is_easy','is_evidence','true_label','label','feature_set']
         features_keys = ['feature_id','feature_type','parameterize','feature_name','weight']
-        learning_methods = ['sgd', 'bgd'] # now support sgd and bgd
+        learning_methods = ['sgd', 'bgd']
         if learning_method not in learning_methods:
             raise ValueError('learning_methods has no this method: '+learning_method)
         #check variables
@@ -35,27 +35,27 @@ class GML:
                     raise ValueError('features has no key: '+attribute)
         self.variables = variables
         self.features = features
-        self.learning_method = learning_method
+        self.learning_method = learning_method # now support sgd and bgd
         self.labeled_variables_set = set()
         self.top_m = top_m
         self.top_k = top_k
         self.top_n = top_n
-        self.optimization_threshold = optimization_threshold
-        self.update_proportion = update_proportion
+        self.optimization_threshold = optimization_threshold #entropy optimization threshold: less than 0 means no need to optimize
+        self.update_proportion = update_proportion #Evidence support update ratio: it is necessary to recalculate the evidence support after inferring a certain percentage of hidden variables
         self.support = EvidentialSupport(variables, features)
         self.select = EvidenceSelect(variables, features)
         self.approximate = ApproximateProbabilityEstimation(variables,features)
         self.subgraph = ConstructSubgraph(variables, features, balance)
-        self.learing_epoches = learning_epoches
-        self.inference_epoches = inference_epoches
-        self.nprocess = nprocess
-        self.out = out
-        self.evidence_interval_count = 10
-        self.all_feature_set = set([x for x in range(0,len(features))])
-        self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(variables)
+        self.learing_epoches = learning_epoches   #Factor graph parameter learning rounds
+        self.inference_epoches = inference_epoches #Factor graph inference rounds
+        self.nprocess = nprocess #Number of multiple processes
+        self.out = out  #Do you need to record the results
+        self.evidence_interval_count = 10  #Number of evidence intervals divided by featureValue
+        self.all_feature_set = set([x for x in range(0,len(features))])   #Feature ID collection
+        self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(variables)   #Dividing evidence variables and latent variables
         #Initialize the necessary properties
-        self.evidence_interval = gml_utils.init_evidence_interval(self.evidence_interval_count) #均匀划分区间
-        gml_utils.init_bound(variables,features)
+        self.evidence_interval = gml_utils.init_evidence_interval(self.evidence_interval_count)    #Divide the evidence interval
+        gml_utils.init_bound(variables,features)   #Initial value of initialization parameter
         gml_utils.init_evidence(features,self.evidence_interval,self.observed_variables_set)
         #save results
         self.now = str(time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time())))
@@ -128,7 +128,7 @@ class GML:
         '''
         select tom m largest ES poential variables
         @param m:
-        @return:
+        @return: m_id_list
         '''
         #If the current number of hidden variables is less than m, directly return to the hidden variable list
         if m > len(self.poential_variables_set):
@@ -137,6 +137,7 @@ class GML:
         m_id_list = list()
         for var_id in self.poential_variables_set:
             poential_var_list.append([var_id, self.variables[var_id]['evidential_support']])
+        #Select the evidence to support the top m largest
         topm_var = heapq.nlargest(m, poential_var_list, key=lambda s: s[1])
         for elem in topm_var:
             m_id_list.append(elem[0])
@@ -157,6 +158,7 @@ class GML:
         k_id_list = list()
         for var_id in var_id_list:
             m_list.append(self.variables[var_id])
+        #Pick the top k with the smallest entropy
         k_list = heapq.nsmallest(k, m_list, key=lambda x: x['entropy'])
         for var in k_list:
             k_id_list.append(var['var_id'])
@@ -261,6 +263,7 @@ class GML:
         '''
         entropy_list = list()
         label_list = list()
+        #Calculate the entropy of k hidden variables
         for var_id in var_id_list:
             var_index = var_id
             self.variables[var_index]['entropy'] = gml_utils.entropy(self.variables[var_index]['inferenced_probability'])

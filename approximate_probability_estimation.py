@@ -3,9 +3,10 @@ import gml_utils
 from pyds import MassFunction
 import math
 
-
-# 近似概率计算的一些方法
 class ApproximateProbabilityEstimation:
+    '''
+    Approximate probability calculation
+    '''
     def __init__(self, variables,features):
         self.variables = variables
         self.features = features
@@ -16,7 +17,7 @@ class ApproximateProbabilityEstimation:
 
     def init_binary_feature_weight(self,value1,value2):   #value1 = 2, value2= -2
         '''
-         #设置binary feature权重的初始值
+       #Set the initial value of the binary feature weight
         :param value1:
         :param value2:
         :return:
@@ -29,7 +30,11 @@ class ApproximateProbabilityEstimation:
         return dict_rel_weight
 
     def labeling_conflict_with_ds(self, mass_functions):
-        '''情感分析中使用，用于计算证据冲突'''
+        '''
+        calculate evidence conflict
+        @param mass_functions:
+        @return:
+        '''
         if len(mass_functions) < 2:
             conflict_degree = 0.0
         else:
@@ -42,7 +47,11 @@ class ApproximateProbabilityEstimation:
         return conflict_degree
 
     def get_pos_prob_based_relation(self, var_id, weight):
-        '''情感分析中使用，用于计算近似概率'''
+        '''
+        @param var_id:
+        @param weight:
+        @return:
+        '''
         if self.variables[var_id]['label'] == 1:
             pos_prob = math.exp(weight) / (1 + math.exp(weight))
         elif self.variables[var_id]['label'] == 0:
@@ -53,9 +62,12 @@ class ApproximateProbabilityEstimation:
 
     def construct_mass_function_for_confict(self, uncertain_degree, pos_prob, neg_prob):
         '''
-        情感分析中使用，用于计算证据冲突，最终排序选topk时使用的是 L中的值
-        # l: support for labeling
-        # u: support for unalbeling
+        # p: positive
+        # n: negative
+        @param uncertain_degree:
+        @param pos_prob:
+        @param neg_prob:
+        @return:
         '''
         return MassFunction({'p': (1 - uncertain_degree) * pos_prob,
                              'n': (1 - uncertain_degree) * neg_prob,
@@ -63,26 +75,30 @@ class ApproximateProbabilityEstimation:
 
     def construct_mass_function_for_ER(self, tau, alpha, confidence,featureValue):
         '''
-        实体识别中使用，用于计算证据冲突，最终排序选topk时使用的是 L中的值
-        # l: support for labeling
-        # u: support for unalbeling
+        # p: positive
+        # n: negative
+        @param tau:
+        @param alpha:
+        @param confidence:
+        @param featureValue:
+        @return:
         '''
-        return MassFunction({'p': 1/(1+math.exp(-confidence*(tau*featureValue+alpha))),  #是同一实体的概率
-                             'n': 1/(1+math.exp(confidence*(tau*featureValue+alpha))),  #不是同一实体的概率
+        return MassFunction({'p': 1/(1+math.exp(-confidence*(tau*featureValue+alpha))),  #Probability of being the same entity
+                             'n': 1/(1+math.exp(confidence*(tau*featureValue+alpha))),  #Probability of not being the same entity
                              })
 
     def approximate_probability_estimation(self, variable_set):
         '''
-        计算给定隐变量集合中每个隐变量的近似概率和熵，用于选topk,适用于ER
-        :param variable_set:
-        :return:
+        Calculate the evidence support for each hidden variable
+        @param variable_set:
+        @return:
         '''
         if type(variable_set) == list or type(variable_set) == set:
             mass_functions = list()
             for id in variable_set:
                 for fid in self.variables[id]['feature_set']:
-                    if self.features[fid]['feature_type']== 'unary_feature': #如果是单因子 还需判断是否有featurevalue 或判断是否需要参数化
-                        if self.features[fid]['parameterize']  == 1 : #如果需要参数化
+                    if self.features[fid]['feature_type']== 'unary_feature': #If it is a unary factor, it is necessary to judge whether there is a feature value or whether it needs to be parameterized
+                        if self.features[fid]['parameterize']  == 1 :
                             if self.features[fid]['regression'].regression is not None and self.features[fid]['regression'].variance > 0 :
                                 mass_functions.append(self.construct_mass_function_for_ER(self.features[fid]['regression'].regression.coef_[0][0],self.features[fid]['regression'].regression.intercept_[0],self.variables[id]['feature_set'][fid][0],self.variables[id]['feature_set'][fid][1]))
                         else:
