@@ -85,7 +85,7 @@ class EvidenceSelect:
                 for feature_id in unary_feature_set:
                     # Sampling by interval with feature_value
                     if self.features[feature_id]['parameterize'] == 1:
-                        if self.features[feature_id]['evidence_count'] > 0 and self.features[feature_id]['monotonicity'] == True:
+                        if self.features[feature_id]['evidence_count'] > 0 and (self.features[feature_id]['monotonicity'] == True and self.features[feature_id]['alpha_bound'][0] < self.features[feature_id]['alpha_bound'][1]):
                             connected_feature_set.add(feature_id)
                             evidence_interval = self.features[feature_id]['evidence_interval']
                             for interval in evidence_interval:
