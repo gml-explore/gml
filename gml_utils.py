@@ -2,6 +2,7 @@ import math
 import numpy as np
 import pandas as pd
 from copy import  copy
+import sys
 
 def load_easy_instance_from_file(filename):
     '''
@@ -213,3 +214,15 @@ def combine_evidences_with_ds(mass_functions, normalization):
             for mass_func in mass_functions[2: len(mass_functions)]:
                 combined_mass = combined_mass.combine_conjunctive(mass_func, normalization)
     return combined_mass
+
+class Logger(object):
+    def __init__(self, filename="Default.log"):
+        self.terminal = sys.stdout
+        self.log = open(filename, "a")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        pass

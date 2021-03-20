@@ -1,5 +1,6 @@
 import heapq
 import pickle
+import sys
 import time
 from numbskull_extend import numbskull
 import logging
@@ -11,6 +12,7 @@ from approximate_probability_estimation import ApproximateProbabilityEstimation
 from construct_subgraph import ConstructSubgraph
 from configparser import ConfigParser
 from concurrent.futures import ProcessPoolExecutor
+from gml_utils import Logger
 
 class GML:
     '''
@@ -400,6 +402,7 @@ class GML:
                 hards_pred_label.append(var['label'])
         all_true_label = easys_true_label + hards_true_label
         all_pred_label = easys_pred_label + hards_pred_label
+        sys.stdout = Logger(self.result)
         print("--------------------------------------------")
         print("total:")
         print("--------------------------------------------")
