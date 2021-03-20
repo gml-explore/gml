@@ -1,6 +1,7 @@
 #提供挑选证据的一些方法
 import logging
 import random
+from copy import copy
 
 
 class EvidenceSelect:
@@ -40,6 +41,26 @@ class EvidenceSelect:
                 elif self.features[feature_id]['feature_type'] == 'unary_feature':
                     unary_feature_set.add(feature_id)
             #Deal with double factors and find evidence variables for k-hop jumps
+            # for k in range(k_hop):
+            #     # Each round adds the adjacent evidence variable of the previous round of hidden variables
+            #     for varid in current_var_set:
+            #         feature_set = self.variables[varid]['feature_set']
+            #         for feature_id in feature_set.keys():
+            #             # If this latent variable id is contained in two variable ids connected by a two-factor, and the other variable is an evidence variable,
+            #             # then this evidence variable is added to the next round of next_var_set, and the relevant features and edges are counted
+            #             if self.features[feature_id]['feature_type'] == 'binary_feature':
+            #                 weight = self.features[feature_id]['weight']
+            #                 for id in weight.keys():
+            #                     if type(id) == tuple and varid in id:
+            #                         another_var_id = id[0] if id[0] != varid else id[1]
+            #                         if self.variables[another_var_id]['is_evidence'] == True:
+            #                             next_var_set.add(another_var_id)
+            #                             connected_feature_set.add(feature_id)
+            #                             connected_edge_set.add((feature_id, id))   #[feature_id,(id1,id2)]
+            #         connected_var_set = connected_var_set.union(next_var_set)
+            #         current_var_set = next_var_set
+            #         next_var_set.clear()
+            #Deal with double factors, find the evidence in the first round, and then find the evidence variables on the double factors connected by the latent variables in the first round
             for k in range(k_hop):
                 # Each round adds the adjacent evidence variable of the previous round of hidden variables
                 for varid in current_var_set:
@@ -53,12 +74,16 @@ class EvidenceSelect:
                                 if type(id) == tuple and varid in id:
                                     another_var_id = id[0] if id[0] != varid else id[1]
                                     if self.variables[another_var_id]['is_evidence'] == True:
-                                        next_var_set.add(another_var_id)
                                         connected_feature_set.add(feature_id)
                                         connected_edge_set.add((feature_id, id))   #[feature_id,(id1,id2)]
-                    connected_var_set = connected_var_set.union(next_var_set)
-                    current_var_set = next_var_set
-                    next_var_set.clear()
+                                        connected_var_set.add(another_var_id)
+                                    elif self.variables[another_var_id]['is_evidence'] == False:
+                                        next_var_set.add(another_var_id)
+                    connected_var_set = connected_var_set.union(current_var_set)
+                current_var_set.clear()
+                current_var_set = copy(next_var_set)
+                # current_var_set = next_var_set
+                next_var_set.clear()
             # Deal with single factor: limit the number of evidence variables for each single factor, and sample when it exceeds
             subgraph_capacity = subgraph_max_num - len(connected_var_set) - 1  # Maximum number of variables that can be added
             unary_evidence_set = set()
@@ -142,7 +167,7 @@ class EvidenceSelect:
             # Add target latent variable related structure
             connected_var_set = list(connected_var_set)
             connected_edge_set = list(connected_edge_set)
-            connected_var_set.append(var_id)
+            # connected_var_set.append(var_id)
             for feature_id in connected_feature_set:
                 if self.features[feature_id]['feature_type'] == 'unary_feature':
                     connected_edge_set.append((feature_id, var_id))
