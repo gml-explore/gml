@@ -26,14 +26,3 @@ class EasyInstanceLabeling:
                 self.variables[var_index]['is_easy'] = True
                 self.variables[var_index]['is_evidence'] = True
                 self.variables[var_index]['label'] = easy['label']
-
-    def label_easy_by_clustering(self,easy_proportion = 0.3):
-        '''
-        通过聚类标easy
-        :param easy_proportion:
-        :return:
-        '''
-        pass
-
-    def label_easy_by_custom(self):
-        pass
