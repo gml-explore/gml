@@ -29,7 +29,7 @@ This class currently provides the following methods：
     >Function: calculate tau and alpha for feature  
     >Parameter：
     > · feature_set - the set of feature_id
-6. evidential_support_for_unary_feature()[[source]](../evidential_support.py)
+6. computer_unary_feature_es()[[source]](../evidential_support.py)
     >Function: calculate the essential support of each latent variable in a given set of latent variables, suitable for Aspect-level sentiment analysis 
     >Parameter：  
     > · variable_set - a set of latent variables
@@ -62,12 +62,7 @@ This class currently provides the following methods：
 11. labeling_propensity_with_ds()[[source]](../evidential_support.py)
     >Function: Combine different methods for different types of evidences for aspect-level sentiment analysis
 
-12. evidential_support_for_unaryAndBinary_feature()[[source]](../evidential_support.py)
-    >Function: calculate the essential support of each latent variable in a given set of latent variables, suitable for Aspect-level sentiment analysis 
-    >Parameter：  
-    > · variable_set - a set of latent variables
-
-13. evidential_support_by_custom()[[source]](../evidential_support.py)
+12. evidential_support_by_custom()[[source]](../evidential_support.py)
     >Function: User-defined method for calculating essential support
     >Parameter：  
     > · variable_set - a set of latent variables

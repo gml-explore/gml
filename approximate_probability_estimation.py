@@ -37,9 +37,8 @@ class ApproximateProbabilityEstimation:
         '''
         if len(mass_functions) < 2:
             conflict_degree = 0.0
-        else:
+        else: #combine Evidence support of multiple factors
             combined_mass = gml_utils.combine_evidences_with_ds(mass_functions, normalization=True)
-            #unnormalize_combined_mass = gml_utils.combine_evidences_with_ds(mass_functions, normalization=False)
             if combined_mass['p'] != 0:
                 conflict_degree =  combined_mass['p']
             else:
@@ -95,7 +94,7 @@ class ApproximateProbabilityEstimation:
         '''
         if type(variable_set) == list or type(variable_set) == set:
             mass_functions = list()
-            for id in variable_set:
+            for id in variable_set: #Choose a different mass function according to the factor type to calculate Approximate probability 
                 for fid in self.variables[id]['feature_set']:
                     if self.features[fid]['feature_type']== 'unary_feature': #If it is a unary factor, it is necessary to judge whether there is a feature value or whether it needs to be parameterized
                         if self.features[fid]['parameterize']  == 1 :
@@ -104,15 +103,13 @@ class ApproximateProbabilityEstimation:
                         else:
                             if len(self.variables[id]['unary_feature_evi_prob']) > 0:
                                 for (feature_id,feature_name,n_samples,neg_prob,pos_prob) in self.variables[id]['unary_feature_evi_prob']:
-                                     #feature_id,feature_name,n_samples,neg_prob,pos_prob
                                     mass_functions.append(self.construct_mass_function_for_confict(self.word_evi_uncer_degree, pos_prob, neg_prob))
                     if self.features[fid]['feature_type']== 'binary_feature': 
                         if len(self.variables[id]['binary_feature_evi']) > 0:
                             for (anotherid,feature_name,feature_id) in self.variables[id]['binary_feature_evi']:
-                        #(anotherid,feature_name,feature_id)
                                 pos_prob = self.get_pos_prob_based_relation(anotherid, self.dict_rel_weight[feature_name])
                                 mass_functions.append(self.construct_mass_function_for_confict(self.relation_evi_uncer_degree, pos_prob, 1 - pos_prob))
-                if len(mass_functions) > 0:
+                if len(mass_functions) > 0: #Write the final ApproximateProbability
                     conflict = self.labeling_conflict_with_ds(mass_functions)
                     self.variables[id]['approximate_probability'] = conflict
                     self.variables[id]['entropy'] = gml_utils.entropy(conflict)

@@ -61,7 +61,7 @@ class Regression:
             self.regression = LinearRegression(copy_X=True, fit_intercept=True, n_jobs=self.n_job).fit(self.X, self.Y,
                                                                                                        sample_weight=sample_weight_list)
             self.residual = np.sum((self.regression.predict(self.X) - self.Y) ** 2) / (self.N - 2)
-            self.meanX = np.mean(self.X)  # 此feature的所有证据变量的feature_value的平均值
+            self.meanX = np.mean(self.X)  #The average value of feature_value of all evidence variables of this feature
             self.variance = np.sum((self.X - self.meanX) ** 2)
             z = self.regression.predict(np.array([0, 1]).reshape(-1, 1))
             self.k = (z[1] - z[0])[0]
@@ -170,6 +170,7 @@ class EvidentialSupport:
         @param unlabel_prob:
         @return:
         '''
+        #The mass function needed for binary_factor to calculate evidence support
         return MassFunction({'l': (1 - uncertain_degree) * label_prob,
                              'u': (1 - uncertain_degree) * unlabel_prob,
                              'lu': uncertain_degree})
@@ -179,6 +180,7 @@ class EvidentialSupport:
         @param theta:
         @return:
         '''
+        #The mass function needed for unary_factor to calculate evidence support
         return MassFunction ({'l':theta,'u':1-theta})
 
     def labeling_propensity_with_ds(self,mass_functions):
@@ -273,6 +275,7 @@ class EvidentialSupport:
         @param update_feature_set:
         @return:
         '''
+        # Select different mass functions according to factor types and calculate evidence support
         self.dict_rel_acc = self.get_dict_rel_acc()
         self.get_unlabeled_var_feature_evi()
         mass_functions = list()
@@ -280,8 +283,8 @@ class EvidentialSupport:
         for vid in variable_set:
             var = self.variables[vid]
             for fid in self.variables[vid]['feature_set']:
-                if self.features[fid]['feature_type'] == 'unary_feature':
-                    if self.features[fid]['parameterize']  == 1 :
+                if self.features[fid]['feature_type'] == 'unary_feature': #Judgment factor type
+                    if self.features[fid]['parameterize']  == 1 : # Whether the factor is parameterized
                         mass_functions.append(self.construct_mass_function_for_para_feature(var['feature_set'][fid][0]))
                     else :
                         if 'unary_feature_evi_prob' in self.variables[vid]:
@@ -294,7 +297,7 @@ class EvidentialSupport:
                             for (anotherid, feature_name, feature_id) in var['binary_feature_evi']:
                                 rel_acc = self.dict_rel_acc[feature_name]
                                 mass_functions.append(self.construct_mass_function_for_propensity(self.relation_evi_uncer_degree,rel_acc, 1-rel_acc))
-            if len(mass_functions) > 0:
+            if len(mass_functions) > 0: #Calculate evidence support by D-S theory
                 combine_evidential_support = self.labeling_propensity_with_ds(mass_functions)
                 var['evidential_support'] = combine_evidential_support['l']
                 mass_functions.clear()

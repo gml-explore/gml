@@ -34,7 +34,7 @@ This class currently provides the following methods:
     >Returns：Proportion of positive instances in marked instances with a feature  
     >Return type：float  
 
-4. construct_mass_function_for_mixture(uncertain_degree, pos_prob, neg_prob) [[source]](../approximate_probability_estimation.py) 
+4. construct_mass_function_for_confict(uncertain_degree, pos_prob, neg_prob) [[source]](../approximate_probability_estimation.py) 
 
     >Function：Evidence support for calculating each feature connected to an unlabeled variable  
     >Parameters：  
@@ -59,19 +59,7 @@ This class currently provides the following methods:
     >Parameters：  
     > · variable_set - Latent variable data set
     
-7. approximate_probability_estimation_for_unary_feature(variable_set) [[source]](../approximate_probability_estimation.py)          
-
-    >Function：Calculate the approximate probability of the selected topm hidden variables, used to select topk, suitable for ER  
-    >Parameters：  
-    > · variable_set - Latent variable data set
-
-8. approximate_probability_estimation_for_unaryAndBinary_feature(variable_set) [[source]](../approximate_probability_estimation.py)       
-
-    >Function：Calculate the approximate probability of the selected topm hidden variables, used to select topk, suitable for ALSA 
-    >Parameters：  
-    > · variable_set - Latent variable data set
-
-9. approximate_probability_estimation_by_custom(variable_set) [[source]](../approximate_probability_estimation.py)           
+7. approximate_probability_estimation_by_custom(variable_set) [[source]](../approximate_probability_estimation.py)           
 
     >Function：Calculate the approximate probability of the selected topm hidden variables, used to select topk, user-defined calculation rules  
     >Parameters：  

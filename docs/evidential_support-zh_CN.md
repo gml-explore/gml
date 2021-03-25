@@ -30,7 +30,7 @@ class **EvidentialSupport**(variables,features,method,evidence_interval_count,in
     >参数：
     > · feature_set - feature_id的集合
 
-6. evidential_support_for_unary_feature()()[[source]](../evidential_support.py)
+6. computer_unary_feature_es()[[source]](../evidential_support.py)
     >功能：计算所有隐变量的Evidential Support  
     >参数：  
     > · update_feature_set - 已更新的feature集合
@@ -53,7 +53,7 @@ class **EvidentialSupport**(variables,features,method,evidence_interval_count,in
     >返回值 : MassFunction函数  
     >返回类型 : 函数  
 
-10. construct_mass_function_for_ER()[[source]](../evidential_support.py)
+10. construct_mass_function_for_para_feature()[[source]](../evidential_support.py)
     >功能：构建mass function，用于参数化的单因子连接变量的Evidential Support计算 （ER应用中）
     >参数：  
     > · theta - 特征的不确定度  
@@ -63,12 +63,7 @@ class **EvidentialSupport**(variables,features,method,evidence_interval_count,in
 11. labeling_propensity_with_ds()[[source]](../evidential_support.py)
     >功能：对于不同类型的evidences用不同的方法进行组合，用于Aspect-level情感分析
 
-12. evidential_support_for_unaryAndBinary_feature()[[source]](../evidential_support.py)
-    >功能：计算给定隐变量集合中每个隐变量的evidential support,适用于Aspect-level情感分析  
-    >参数：  
-    > · variable_set - 给定隐变量的集合
-
-13. evidential_support_by_custom()[[source]](../evidential_support.py)
+12. evidential_support_by_custom()[[source]](../evidential_support.py)
     >功能：用户自定义用于计算evidential support的方法  
     >参数：  
     > · variable_set - 给定隐变量的集合
