@@ -11,13 +11,17 @@ class **GML** [[source]](../gml.py)
     >功能：计算evidential support  
     >参数：  
     > · variable_set - 目标变量的集合    
-    > · update_feature_set - 目标特征的集合    
+    > · update_feature_set - 目标特征的集合   
+    >返回值：无  
+    >返回类型：无 
 
 2. approximate_probability_estimation(variable_set) [[source]](../gml.py)            
 
     >功能：计算近似概率  
     >参数：  
     > · variable_set - 目标变量的集合      
+    >返回值：无  
+    >返回类型：无 
 
 3. select_top_m_by_es(m) [[source]](../gml.py)            
 
@@ -36,7 +40,7 @@ class **GML** [[source]](../gml.py)
     >返回值：一个包含k个id的列表  
     >返回类型：列表
 
-5. select_evidence(var_id) [[source]](../gml.py)            
+5. evidence_select(var_id) [[source]](../gml.py)            
 
     >功能：挑选后续建子图需要的边，变量和特征  
     >参数：  
@@ -57,6 +61,8 @@ class **GML** [[source]](../gml.py)
     >功能：推理子图  
     >参数：  
     > · var_id - 用于实体识别则var_id是一个变量id,用于情感分类，则var_id是k个变量的集合    
+    >返回值：无  
+    >返回类型：无 
 
 8. label(var_id_list) [[source]](../gml.py)            
 
@@ -64,12 +70,28 @@ class **GML** [[source]](../gml.py)
     >参数：  
     > · var_id_list - k个id的列表，每个变量对应的概率从variables中拿    
     >返回值：无输出，直接更新vairables中的label和entropy，顺便可以更新一下observed_variables_id和poential_variables_id  
-    >返回类型：字典
+    >返回类型：列表
 
 9. inference() [[source]](../gml.py)            
 
     >功能：主流程    
+    >参数：  
+    > · 无                 
+    >返回值：无  
+    >返回类型：无 
 
 10. score() [[source]](../gml.py)            
 
     >功能：计算推理结果的准确率，精确率，召回率，f1值等  
+    >参数：  
+    > · 无                 
+    >返回值：无  
+    >返回类型：无 
+11. save_results() [[source]](../gml.py)            
+
+    >功能：保存推理完成的变量和特征信息 
+    >参数：  
+    > · 无                 
+    >返回值：无  
+    >返回类型：无 
+

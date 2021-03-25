@@ -12,19 +12,24 @@ This class currently provides the following methods:
     >parameter:  
     > · variable_set - the set of target variables    
     > · update_feature_set - the set of target features    
+    >Return: none            
+    >Return type：none          
+
 
 2. approximate_probability_estimation(variable_set) [[source]](../gml.py)            
 
     >Function: Calculate approximate probability  
     >parameter:  
     > · variable_set - the set of target variables      
+    >Return: none            
+    >Return type：none          
 
 3. select_top_m_by_es(m) [[source]](../gml.py)            
 
     >Function: Select the first m latent variables according to the calculated Evidential Support (large to small)
     >parameter:  
     > · m - The number of latent variables to be selected      
-    >Return: a list containing m variable ids  
+    >Return: a list containing m variable ids             
     >Return type：list
 
 4. select_top_k_by_entropy(var_id_list, k) [[source]](../gml.py)            
@@ -33,7 +38,7 @@ This class currently provides the following methods:
     >parameter:  
     > · mvar_id_list - Choose range      
     > · k - The number of latent variables to be selected      
-    >Return: a list containing k ids  
+    >Return: a list containing k ids           
     >Return type：list
 
 5. select_evidence(var_id) [[source]](../gml.py)            
@@ -41,22 +46,24 @@ This class currently provides the following methods:
     >Function: Select the edges, variables and features which needed for subsequent subgraph construction  
     >parameter:  
     > · var_id - The id of the target variable    
-    >Return: Edges, variables and features needed for subsequent subgraph construction  
+    >Return: Edges, variables and features needed for subsequent subgraph construction            
     >Return type：set
 
 6. construct_subgraph(var_id) [[source]](../gml.py)            
 
     >Function: Select topk latnet variables and create subgraph  
     >parameter:  
-    > · var_id - The id of the target variable    
-    >Return: According to the factor graph requirement of numbskull,return weight, variable, factor, fmap, domain_mask, edges  
+    > · var_id - The id of the target variable         
+    >Return: According to the factor graph requirement of numbskull,return weight, variable, factor, fmap, domain_mask, edges           
     >Return type: multiple types
 
 7. inference_subgraph(var_id) [[source]](../gml.py)            
 
     >Function: inference subgraph  
     >parameter:  
-    > · var_id - For entity recognition, var_id is a variable id, and var_id is a set of k variables for sentiment analysis
+    > · var_id - For entity recognition, var_id is a variable id, and var_id is a set of k variables for sentiment analysis              
+    >Return: none            
+    >Return type：none          
 
 8. label(var_id_list) [[source]](../gml.py)            
 
@@ -68,8 +75,23 @@ This class currently provides the following methods:
 
 9. inference() [[source]](../gml.py)            
 
-    >Function: Main flow    
+    >Function: Main flow      
+    >parameter:  
+    > · none            
+    >Return: none            
+    >Return type：none            
 
 10. score() [[source]](../gml.py)            
 
     >Function: Calculate the accuracy rate, precision rate, recall rate, f1 value of inference results, etc.  
+    >parameter:  
+    > · none      
+    >Return: none            
+    >Return type：none            
+
+11. save_results() [[source]](../gml.py)            
+    >Function: Save the variable and feature information after inference.               
+    >parameter:  
+    > · none       
+    >Return: none                     
+    >Return type：none            
