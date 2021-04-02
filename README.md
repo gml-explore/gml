@@ -20,26 +20,18 @@ gml is a Python package that provides for Gradual Machine Learning
 
 ## Introuduction
    ### Goal
-   Gradual machine learning mainly includes three modules: simple instance recognition, feature extraction and influence modeling and progressive reasoning. For different domain tasks, simple instance recognition, feature extraction, and influence modeling techniques are quite different. For this, we will set up a common interface for users to use. Incremental reasoning is the most important module in the progressive machine learning framework. Its core principle is shared by all tasks, so we encapsulate it into a directly callable interface and open source the code on GitHub for user reference. Based on the R & D progressive machine learning platform, users only need to generate data according to the set interface, and provide the corresponding constraints, they can use the asymptotic machine learning framework for inference. Specifically, users need to provide specific simple instance labeling and feature extraction techniques according to different tasks; then call the progressive inference module to perform inference directly. It should be noted that the progressive inference module includes three steps: evidence support estimation, entropy approximate calculation, and inference subgraph construction. They may vary according to different tasks, so if the open source project provides methods that cannot meet user needs , Users can customize related methods. For the development of an open source platform for asymptotic machine learning, we use the open source factor graph inference tool Numbskull released by Stanford University as the basis, and combine the different needs of entity recognition and sentiment analysis to modify the Numbskull source code. The original version of Numbskull only supports the reasoning of a single parameter of the factor, and the modified Numbskull can support the functionalization of the parameter of the factor. The open source platform for asymptotic machine learning will be used as a core tool for incremental reasoning to complete the parameter learning.
-   ### Theory
-   Gradual machine learning framework draws on the human learning model from easy to difficult. First, the machine automatically completes the labeling of simple instances in the task, and then gradually completes the labeling of the harder instances based on factor graph reasoning. Unlike deep learning, progressive machine learning does not require independent and identical distribution assumptions, and requires little or no manual labeling of data. The progressive machine learning framework includes three modules: simple instance recognition, key feature extraction and influence modeling, and progressive reasoning.
-   #### Easy Instance Labeling
-   Given a classification task, if there is not enough training data, it is often difficult to accurately mark all instances in the task. However, if we only need to simply label simple instances in the task, then the situation will become easier. In actual scenarios, simple instance labeling can be performed simply according to user-specified rules or existing unsupervised learning techniques. For example, unsupervised clustering. Progressive machine learning begins with the labeling results of simple instance labels. Therefore, high-precision labeling of simple examples is critical to the final performance of progressive machine learning in a given task.
-   #### Feature Extraction and Influence Modeling
-   The characteristic is the medium that transfers information between simple and complex instances. In this step, we need to extract the features shared by the marked simple instance and the unmarked complex instance. To facilitate the transfer of effective information between instances, we extract different kinds of features to capture as much information as possible. For the extracted features, we need to further model their influence on instance annotation.
-   #### Gradual Inference
-   In this step, we will gradually mark complex instances. Through iterative factor graph inference, parameter learning is performed on the factor graph. In each iteration, we select the unlabeled instance with the highest degree of evidence certainty for labeling. Iterate repeatedly until all instances in the task are marked. It is worth noting that in progressive reasoning, the newly marked instances in the current iteration will be used as evidence in subsequent iterations.
+   In order to support more and more applications of gradual machine learning and help researchers quickly complete model deployment and testing, this project aims to develop a general gradual machine learning platform. Gradual machine learning mainly includes three major steps: easy instance labeling, feature extraction and influence modeling, and gradual inference. According to the different steps of gradual machine learning, multiple unified algorithms are designed and implemented. Currently, several types of factor graphs such as single-factor non-parameterize, binary-factor non-parameterize, and single-factor parameterize are supported, and support factor graph parameter learning algorithm based on stochastic gradient descent and batch gradient descent
    ### Flowchat
    <p><img src="./docs/flowchat.jpg" alt="gml flowchat" title="flowchat &amp; tracks" /></p>    
 
 
 ## Installation
-    pip install gml
+    pip install gradual-ml
 ## Usage
  Before using this framework, you need to prepare your data according to the following [Data structure description](./docs/data_structures.md) .
 
 After preparing the data, you can use this framework as follows.
-First you need to prepare a configuration file.
+First you need to prepare a configuration file [example](./examples/example.config),and set some [parameters](./docs/parameter_description.md)
 ``` python 
 [para]
 top_m = 2000  
@@ -63,7 +55,7 @@ Then, call GML as follows:
   graph = GML.initial("alsa.config", variables, features)
   graph.inference()
 ```               
-Here is an [example](examples/alsa_example.py) you can refer.
+Here is an [example](examples/example.py) you can refer.
 ## API
 <details>
     <summary>Easy Instance Labeling</summary>
@@ -140,10 +132,9 @@ Here is an [example](examples/alsa_example.py) you can refer.
   We appreciate all contributions. If you are planning to contribute back bug-fixes, please do so without any further discussion.
   If you plan to contribute new features, utility functions or extensions to the core, please first open an issue and discuss the feature with us
 ## Related Efforts
-  ### [Gradual Machine Learning for Entity Resolution](https://github.com/gml-explore/GML_for_ER)  
-  Usually considered as a classification problem, entity resolution (ER) can be very challenging on real data due to the prevalence of dirty values. The state-of-the-art solutions for ER were built on a variety of learning models (most notably deep neural networks), which require lots of accurately labeled training data. Unfortunately, high-quality labeled data usually require expensive manual work, and are therefore not readily available in many real scenarios. In this paper, we propose a novel learning paradigm for ER, called gradual machine learning, which aims to enable effective machine labeling without the requirement for manual labeling effort. It begins with some easy instances in a task, which can be automatically labeled by the machine with high accuracy, and then gradually labels more challenging instances by iterative factor graph inference. In gradual machine learning, the hard instances in a task are gradually labeled in small stages based on the estimated evidential certainty provided by the labeled easier instances. Our extensive experiments on real data have shown that the performance of the proposed approach is considerably better than its unsupervised alternatives, and highly competitive compared to the state-of-the-art supervised techniques. Using ER as a test case, we demonstrate that gradual machine learning is a promising paradigm potentially applicable to other challenging classification tasks requiring extensive labeling effort.
+  ### [Gradual Machine Learning for Entity Resolution](https://github.com/gml-explore/GML_for_ER)   
   ### [Gradual Machine Learning for Aspect-level Sentiment Analysis](https://github.com/gml-explore/GML_for_ALSA) 
-  The state-of-the-art solutions for Aspect-Level Sentiment Analysis (ALSA) are built on a variety of deep neural networks (DNN), whose efficacy depends on large amounts of accurately labeled training data. Unfortunately, highquality labeled training data usually require expensive manual work, and are thus not readily available in many real scenarios. In this paper, we aim to enable effective machine labeling for ALSA without the requirement for manual labeling effort. Towards this aim, we present a novel solution based on the recently proposed paradigm of gradual machine learning. It begins with some easy instances in an ALSA task, which can be automatically labeled by the machine with high accuracy, and then gradually labels the more challenging instances by iterative factor graph inference. In the process of gradual machine learning, the hard instances are gradually labeled in small stages based on the estimated evidential certainty provided by the labeled easier instances. Our extensive experiments on the benchmark datasets have shown that the performance of the proposed approach is considerably better than its unsupervised alternatives, and also highly competitive compared to the state-of-the-art supervised DNN techniques
+
 
 ## The Team
 > [@Anqi4869](https://github.com/Anqi4869)                        
