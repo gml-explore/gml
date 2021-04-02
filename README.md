@@ -62,8 +62,6 @@ Here is an [example](examples/example.py) you can refer.
   
 * [EasyInstanceLabeling](./docs/easy_instance_labeling.md "Perform simple instance labeling based on simple user-specified rules or existing unsupervised learning techniques")
     * [label_easy_by_file](./docs/easy_instance_labeling.md "Mark Easy in variables according to the provided easy list")
-    * [label_easy_by_clustering](./docs/easy_instance_labeling.md "Easy instance labeling through clustering")
-    * [label_easy_by_custom](./docs/easy_instance_labeling.md "Easy example labeling through user-defined")
 </details>
 
 <details>
@@ -72,17 +70,13 @@ Here is an [example](examples/example.py) you can refer.
 * [class EvidentialSupport](./docs/evidential_support.md "Evidence-supported method set")
     * [get_unlabeled_var_feature_evi](./docs/evidential_support.md "Calculate the ratio of 0 to 1 in the evidence variable associated with each unary feature of each hidden variable, and the variable id at the other end of the binary feature")
     * [separate_feature_value](./docs/evidential_support.md "Select the easy feature value of each feature for linear regression")
-    * [create_csr_matrix](./docs/evidential_support.md "Create a sparse matrix to store all featureValue of all variables for subsequent calculation of Evidential Support")
     * [influence_modeling](./docs/evidential_support.md "Perform linear regression on the updated feature, save all the results of the regression back to the feature, the key is 'regression' ")
     * [init_tau_and_alpha](./docs/evidential_support.md "Calculate tau and alpha parameters for a given feature")
-    * [evidential_support_by_regression](./docs/evidential_support.md "Calculate the Evidential Support parameters of all hidden variables")
     * [get_dict_rel_acc](./docs/evidential_support.md "Calculate the accuracy of different types of relationships")
-    * [construct_mass_function_for_propensity](./docs/evidential_support.md "Build mass function for Evidential Support calculation in Aspect-level sentiment analysis application")
+    * [construct_mass_function_for_propensity](./docs/evidential_support.md "Build mass function for Evidential Support calculation in no para factor")
     * [labeling_propensity_with_ds](./docs/evidential_support.md "Different types of evidences are combined in different ways for aspect-level sentiment analysis")
-    * [evidential_support_by_relation](./docs/evidential_support.md "Calculate the essential support of each hidden variable in a given set of hidden variables, suitable for Aspect-level sentiment analysis")
-    * [evidential_support_by_custom](./docs/evidential_support.md "User-defined method for calculating essential support ")
 * [class Regression](./docs/evidential_support.md "Linear regression related class, perform linear regression on all features, used for the essential support calculation of Entity Resolution")
-    * [perform](./docs/evidential_support.md "Perform linear regression method for Entity Resolution")
+    * [perform](./docs/evidential_support.md "Perform linear regression method ")
 </details>
 
 <details>
@@ -104,7 +98,7 @@ Here is an [example](examples/example.py) you can refer.
     * [separate_variables](./docs/gml_utils.md "Divide variables into evidence variables and hidden variables")
     * [init_evidence_interval](./docs/gml_utils.md "Initial evidence interval")
     * [init_evidence](./docs/gml_utils.md "Initialize the witness_interval and witness_count attributes of all features")
-    * [write_labeled_var_to_evidence_interval](./docs/gml_utils.md "Because each featurew maintains the evidence_interval attribute, this attribute needs to be updated after each variable is marked")
+    * [update_evidence](./docs/gml_utils.md "Because each featurew maintains the evidence_interval attribute, this attribute needs to be updated after each variable is marked")
     * [entropy](./docs/gml_utils.md "Calculate entropy after given probability")
     * [open_p](./docs/gml_utils.md "Weight calculation formula")
     * [combine_evidences_with_ds](./docs/gml_utils.md "Aggregate evidence from different sources")
@@ -114,16 +108,12 @@ Here is an [example](examples/example.py) you can refer.
     * [get_pos_prob_based_relation](./docs/approximate_probability_estimation.md "Calculate the proportion of positive instances in marked instances with a feature")
     * [construct_mass_function_for_confict](./docs/approximate_probability_estimation.md "Evidence support for calculating each feature connected to an unlabeled variable")
     * [approximate_probability_estimation](./docs/approximate_probability_estimation.md "Calculate the approximate probability of the selected topm hidden variables, used to select topk")
-    * [approximate_probability_estimation_by_custom](./docs/approximate_probability_estimation.md "Calculate the approximate probability of the selected topm hidden variables, used to select topk, user-defined calculation rules")
 * [class EvidenceSelect](./docs/evidence_select.md "Select evidence variables for latent variable reasoning")
     * [select_evidence](./docs/evidence_select.md "Select evidence variables for latent variable reasoning")
     * [select_evidence_by_custom](./docs/evidence_select.md "Select evidence variables for hidden variable reasoning, user-defined selection method")
 * [construct_subgraph](./docs/construct_subgraph.md "Construct factor graph")
     * [construct_subgraph](./docs/construct_subgraph.md "A unified method for constructing factor graphs")
-    * [construct_subgraph_for_mixture](./docs/construct_subgraph.md "Construct factor graph, suitable for ER")
-    * [construct_subgraph_for_unaryPara](./docs/construct_subgraph.md "Construct factor graphs for ALSA")
     * [construct_subgraph_for_custom](./docs/construct_subgraph.md "Construction factor graph, user-defined construction method")
-* [how to use numbskull](./docs/how%20to%20use%20numbskull.md "how to use numbskull")
 </details>
  
 ## FAQ

@@ -1,13 +1,46 @@
 # 参数说明
-
-**top_m**                
-**top_k**                  
-**top_n**                   
-**update_proportion**              
-**optimization_threshold**                      
-**balance**                    
-**learning_epoches**                 
-**inference_epoches**                 
-**learning_method**                 
-**n_process**                  
-**out**               
+ 以下参数均设置了默认值，可选择性进行修改。              
+**top_m**  
+```                   
+  在证据支持计算完成后，选出前m个证据支持最大的隐变量作为候选，计算其近似概率和近似熵。默认设置为2000。
+```              
+**top_k** 
+```                   
+  在m个隐变量的近似熵计算完成后，选出前k个近似熵最小的隐变量，用于构建k个子图。默认设置为10。
+```                      
+**top_n** 
+```                   
+  在k个子图推理完成后，根据真实推理出的概率计算熵，选出前n个熵最小的变量进行标记。默认设置为1。
+```                       
+**update_proportion**   
+```                   
+  为了加速推理，仅在每标记完update_proportion比例的隐变量后才会重新计算证据支持。默认设置为0.01。
+```                
+**optimization_threshold**  
+```                   
+  为了加速推理，对于近似熵小于等于optimization_threshold的隐变量直接进行标记，不再推理。默认设置为0，设置为负值时表示无需此项优化。
+```                         
+**balance**    
+```                   
+  在建立子图时，对0-1变量进行平衡化处理。默认设置为False。
+```                     
+**learning_epoches**  
+```                   
+  参数学习轮数，默认设置为500。
+```                    
+**inference_epoches**   
+```                   
+  因子图推理轮数，默认设置为500。
+```                   
+**learning_method**    
+```                   
+  参数学习方法，目前支持随机梯度下降（sgd）和批量梯度下降两种（bgd）,默认设置为sgd。
+```                  
+**n_process**   
+```                   
+  多进程加速进程数目，默认设置为1。
+```                    
+**out**     
+```                   
+  是否需要实时输出隐变量推理的概率和标签到文件，默认为False。
+```               

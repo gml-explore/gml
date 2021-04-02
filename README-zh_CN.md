@@ -62,8 +62,7 @@ Here is an [example](examples/example.py) you can refer.
   
 * [EasyInstanceLabeling](./docs/easy_instance_labeling-zh_CN.md "根据简单的用户指定规则或现有的无监督学习技术来执行简单的实例标记")
     * [label_easy_by_file](./docs/easy_instance_labeling-zh_CN.md "根据提供的easy列表标出variables中的Easy")
-    * [label_easy_by_clustering](./docs/easy_instance_labeling-zh_CN.md "通过聚类进行简单实例标注")
-    * [label_easy_by_custom](./docs/easy_instance_labeling-zh_CN.md "通过用户自定义进行简单实例标注")
+
 </details>
 
 <details>
@@ -72,17 +71,14 @@ Here is an [example](examples/example.py) you can refer.
 * [class EvidentialSupport](./docs/evidential_support-zh_CN.md "证据支持计算的方法集合")
     * [get_unlabeled_var_feature_evi](./docs/evidential_support-zh_CN.md "计算每个隐变量的每个unary feature相关联的证据变量里面0和1的比例，以及binary feature另一端的变量id")
     * [separate_feature_value](./docs/evidential_support-zh_CN.md "选出每个feature的easy feature value用于线性回归")
-    * [create_csr_matrix](./docs/evidential_support-zh_CN.md "创建稀疏矩阵存储所有variable的所有featureValue，用于后续计算Evidential Support")
     * [influence_modeling](./docs/evidential_support-zh_CN.md "对已更新feature进行线性回归,把回归得到的所有结果存回feature, 键为'regression' ")
     * [init_tau_and_alpha](./docs/evidential_support-zh_CN.md "对给定的feature计算tau和alpha 参数")
-    * [evidential_support_by_regression](./docs/evidential_support-zh_CN.md "计算所有隐变量的Evidential Support 参数")
     * [get_dict_rel_acc](./docs/evidential_support-zh_CN.md "计算不同类型关系的准确性")
-    * [construct_mass_function_for_propensity](./docs/evidential_support-zh_CN.md "构建mass function，用于Aspect-level情感分析应用中的Evidential Support计算")
-    * [labeling_propensity_with_ds](./docs/evidential_support-zh_CN.md "对于不同类型的evidences用不同的方法进行组合，用于Aspect-level情感分析")
-    * [evidential_support_by_relation](./docs/evidential_support-zh_CN.md "计算给定隐变量集合中每个隐变量的evidential support,适用于Aspect-level情感分析")
+    * [construct_mass_function_for_propensity](./docs/evidential_support-zh_CN.md "构建mass function，用于非参数化因子中的Evidential Support计算")
+    * [labeling_propensity_with_ds](./docs/evidential_support-zh_CN.md "对于不同类型的evidences用不同的方法进行组合")
     * [evidential_support_by_custom](./docs/evidential_support-zh_CN.md "用户自定义用于计算evidential support的方法 ")
 * [class Regression](./docs/evidential_support-zh_CN.md "线性回归相关类，对所有feature进行线性回归，用于Entity Resolution部分的evidential support计算")
-    * [perform](./docs/evidential_support-zh_CN.md "执行线性回归方法，适用于Entity Resolution")
+    * [perform](./docs/evidential_support-zh_CN.md "执行线性回归方法")
 </details>
 
 <details>
@@ -104,7 +100,7 @@ Here is an [example](examples/example.py) you can refer.
     * [separate_variables](./docs/gml_utils-zh_CN.md "将variables分成证据变量和隐变量")
     * [init_evidence_interval](./docs/gml_utils-zh_CN.md "初始化证据区间")
     * [init_evidence](./docs/gml_utils-zh_CN.md "初始化所有feature的evidence_interval属性和evidence_count属性")
-    * [write_labeled_var_to_evidence_interval](./docs/gml_utils-zh_CN.md "因为每个featurew维护了evidence_interval属性，所以每标记一个变量之后，需要更新这个属性")
+    * [update_evidence](./docs/gml_utils-zh_CN.md "因为每个featurew维护了evidence_interval属性，所以每标记一个变量之后，需要更新这个属性")
     * [entropy](./docs/gml_utils-zh_CN.md "给定概率之后计算熵")
     * [open_p](./docs/gml_utils-zh_CN.md "权重计算公式")
     * [combine_evidences_with_ds](./docs/gml_utils-zh_CN.md "汇总不同来源的证据")
@@ -114,16 +110,12 @@ Here is an [example](examples/example.py) you can refer.
     * [get_pos_prob_based_relation](./docs/approximate_probability_estimation-zh_CN.md "计算具有某feature的已标记实例中正实例的比例")
     * [construct_mass_function_for_confict](./docs/approximate_probability_estimation-zh_CN.md "计算与某未标记变量相连的每个特征的证据支持")
     * [approximate_probability_estimation](./docs/approximate_probability_estimation-zh_CN.md "计算选出的topm个隐变量的近似概率，用于选topk")
-    * [approximate_probability_estimation_by_custom](./docs/approximate_probability_estimation-zh_CN.md "计算选出的topm个隐变量的近似概率，用于选topk,由用户自定义计算规则")
 * [class EvidenceSelect](./docs/evidence_select-zh_CN.md "为隐变量推理挑选证据变量")
-    * [select_evidence](./docs/evidence_select-zh_CN.md "为隐变量推理挑选证据变量，适用于ER")
+    * [select_evidence](./docs/evidence_select-zh_CN.md "为隐变量推理挑选证据变量")
     * [select_evidence_by_custom](./docs/evidence_select-zh_CN.md "为隐变量推理挑选证据变量，由用户自定义挑选方法")
 * [construct_subgraph](./docs/construct_subgraph-zh_CN.md "构建因子图")
     * [construct_subgraph](./docs/construct_subgraph-zh_CN.md "一种统一的构建因子图的方法")
-    * [construct_subgraph_for_mixture](./docs/construct_subgraph-zh_CN.md "构建因子图，适用于ER")
-    * [construct_subgraph_for_unaryPara](./docs/construct_subgraph-zh_CN.md "构建因子图，适用于ALSA")
     * [construct_subgraph_for_custom](./docs/construct_subgraph-zh_CN.md "构建因子图，由用户自定义构建方法")
-* [how to use numbskull](./docs/how%20to%20use%20numbskull-zh_CN.md "如何使用numbskull")
 </details>
 
 ## 常见问题解答
