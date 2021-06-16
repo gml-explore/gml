@@ -256,7 +256,7 @@ class GML:
         elif type(var_id) == int:
             self.variables[var_id]['inferenced_probability'] = ns_inference.factorGraphs[0].marginals[var_map[var_id]]
         logging.info("inferenced probability recored")
-
+        return var_id,ns_inference.factorGraphs[0].marginals[var_map[var_id]]
     def label(self,var_id_list):
         '''
         Select n from k inferred hidden variables for labeling

@@ -23,8 +23,6 @@ gml是为渐进机器学习提供的一个python库。
    ### 框架流程图
    <p><img src="./docs/flowchat.jpg" alt="gml flowchat" title="flowchat &amp; tracks" /></p>    
 
-## 安装
-    pip install gradual-ml
 ## 使用
  在使用此框架之前，您需要按照以下[数据结构](./docs/data_structures-zh_CN.md)要求准备您的数据。    
  

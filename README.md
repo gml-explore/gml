@@ -25,8 +25,6 @@ gml is a Python package that provides for Gradual Machine Learning
    <p><img src="./docs/flowchat.jpg" alt="gml flowchat" title="flowchat &amp; tracks" /></p>    
 
 
-## Installation
-    pip install gradual-ml
 ## Usage
  Before using this framework, you need to prepare your data according to the following [Data structure description](./docs/data_structures.md) .
 
