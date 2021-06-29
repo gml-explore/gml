@@ -35,7 +35,7 @@ class ApproximateProbabilityEstimation:
         @param mass_functions:
         @return:
         '''
-        if len(mass_functions) < 2:
+        if len(mass_functions) == 0:
             conflict_degree = 0.0
         else: #combine Evidence support of multiple factors
             combined_mass = gml_utils.combine_evidences_with_ds(mass_functions, normalization=True)
