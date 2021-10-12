@@ -107,8 +107,9 @@ class ApproximateProbabilityEstimation:
                     if self.features[fid]['feature_type']== 'binary_feature': 
                         if len(self.variables[id]['binary_feature_evi']) > 0:
                             for (anotherid,feature_name,feature_id) in self.variables[id]['binary_feature_evi']:
-                                pos_prob = self.get_pos_prob_based_relation(anotherid, self.dict_rel_weight[feature_name])
-                                mass_functions.append(self.construct_mass_function_for_confict(self.relation_evi_uncer_degree, pos_prob, 1 - pos_prob))
+                                if fid == feature_id:
+                                    pos_prob = self.get_pos_prob_based_relation(anotherid, self.dict_rel_weight[feature_name])
+                                    mass_functions.append(self.construct_mass_function_for_confict(self.relation_evi_uncer_degree, pos_prob, 1 - pos_prob))
                 if len(mass_functions) > 0: #Write the final ApproximateProbability
                     conflict = self.labeling_conflict_with_ds(mass_functions)
                     self.variables[id]['approximate_probability'] = conflict

@@ -63,6 +63,7 @@ class EvidenceSelect:
             #Deal with double factors, find the evidence in the first round, and then find the evidence variables on the double factors connected by the latent variables in the first round
             for k in range(k_hop):
                 # Each round adds the adjacent evidence variable of the previous round of hidden variables
+                tmp_dict = {}
                 for varid in current_var_set:
                     feature_set = self.variables[varid]['feature_set']
                     for feature_id in feature_set.keys():
@@ -77,8 +78,15 @@ class EvidenceSelect:
                                         connected_feature_set.add(feature_id)
                                         connected_edge_set.add((feature_id, id))   #[feature_id,(id1,id2)]
                                         connected_var_set.add(another_var_id)
+                                        if tmp_dict.has_key((var_id,varid)):
+                                            tmp_feature =tmp_dict[(var_id,varid)]
+                                            connected_edge_set.add((tmp_feature,(var_id,varid)))
+                                        elif tmp_dict.has_key((varid,var_id)):
+                                            tmp_feature = tmp_dict[(varid,var_id)]
+                                            connected_edge_set.add((tmp_feature, (varid, var_id)))
                                     elif self.variables[another_var_id]['is_evidence'] == False:
                                         next_var_set.add(another_var_id)
+                                        tmp_dict[id] = feature_id
                     connected_var_set = connected_var_set.union(current_var_set)
                 current_var_set.clear()
                 current_var_set = copy(next_var_set)
