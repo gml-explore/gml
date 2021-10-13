@@ -2,6 +2,7 @@ import heapq
 import pickle
 import sys
 import time
+import numpy as np
 from numbskull_extend import numbskull
 import logging
 from sklearn import metrics
@@ -126,47 +127,49 @@ class GML:
         '''
         self.approximate.approximate_probability_estimation(variable_set)
 
+
     def select_top_m_by_es(self, m):
         '''
         select tom m largest ES poential variables
         @param m:
         @return: m_id_list
         '''
-        #If the current number of hidden variables is less than m, directly return to the hidden variable list
+        # If the current number of hidden variables is less than m, directly return to the hidden variable list
         if m > len(self.poential_variables_set):
-           return list(self.poential_variables_set)
+            return list(self.poential_variables_set)
         poential_var_list = list()
         m_id_list = list()
         for var_id in self.poential_variables_set:
             poential_var_list.append([var_id, self.variables[var_id]['evidential_support']])
-        #Select the evidence to support the top m largest
+        # Select the evidence to support the top m largest
         topm_var = heapq.nlargest(m, poential_var_list, key=lambda s: s[1])
+
+        # edit at 2021-4-22
+        entropy_list = []
+
         for elem in topm_var:
             m_id_list.append(elem[0])
+            entropy_list.append(self.variables[elem[0]]['entropy'])
+
+        m_id_list = np.array(m_id_list)[np.argsort(np.array(entropy_list))]
         logging.info('select m finished')
-        return m_id_list
+        return list(m_id_list)
 
     def select_top_k_by_entropy(self, var_id_list, k):
         '''
+        # 按照熵已经排过序
         select top k  smallest entropy poential variables
         @param var_id_list:
         @param k:
         @return:
         '''
-        #If the number of hidden variables is less than k, return the hidden variable list directly
+        # If the number of hidden variables is less than k, return the hidden variable list directly
         if len(var_id_list) < k:
             return var_id_list
-        m_list = list()
-        k_id_list = list()
-        for var_id in var_id_list:
-            m_list.append(self.variables[var_id])
-        #Pick the top k with the smallest entropy
-        k_list = heapq.nsmallest(k, m_list, key=lambda x: x['entropy'])
-        for var in k_list:
-            k_id_list.append(var['var_id'])
-        logging.info('select k finished')
-        return k_id_list
+        k_id_list = list(var_id_list[0:k])
+        #logging.info('select k finished')
 
+        return k_id_list
     def evidence_select(self, var_id):
         '''
         Determine the subgraph structure
@@ -208,7 +211,7 @@ class GML:
             learn_non_evidence=True,
             sample_evidence=False,
             burn_in=10,
-            nthreads=1,
+            nthreads=3,
             learning_method = self.learning_method
         )
         weight, variable, factor, fmap, domain_mask, edges_num, var_map,alpha_bound,tau_bound,weight_map_feature,sample_list,wmap,wfactor = self.construct_subgraph(var_id)
@@ -243,7 +246,7 @@ class GML:
             learn_non_evidence=False,
             sample_evidence=False,
             burn_in=10,
-            nthreads=1,
+            nthreads=2,
             learning_method=self.learning_method
         )
         ns_inference.loadFactorGraph(*subgraph)
@@ -257,7 +260,8 @@ class GML:
             self.variables[var_id]['inferenced_probability'] = ns_inference.factorGraphs[0].marginals[var_map[var_id]]
         logging.info("inferenced probability recored")
         return var_id,ns_inference.factorGraphs[0].marginals[var_map[var_id]]
-    def label(self,var_id_list):
+
+    def label(self, var_id_list, isapprox, mlist=None):
         '''
         Select n from k inferred hidden variables for labeling
         @param var_id_list:
@@ -265,25 +269,30 @@ class GML:
         '''
         entropy_list = list()
         label_list = list()
-        #Calculate the entropy of k hidden variables
+        probability_indicator = None
+        if isapprox == True:
+            probability_indicator = 'approximate_probability'
+        else:
+            probability_indicator = 'inferenced_probability'
+        # Calculate the entropy of k hidden variables
         for var_id in var_id_list:
             var_index = var_id
-            self.variables[var_index]['entropy'] = gml_utils.entropy(self.variables[var_index]['inferenced_probability'])
+            self.variables[var_index]['entropy'] = gml_utils.entropy(self.variables[var_index][probability_indicator])
             entropy_list.append([var_id, self.variables[var_index]['entropy']])
-        #If labelnum is less than the number of variables passed in, mark top_n
+        # If labelnum is less than the number of variables passed in, mark top_n
         if len(var_id_list) > self.top_n:
-            var = list()
             min_var_list = heapq.nsmallest(self.top_n, entropy_list, key=lambda x: x[1])  # 选出熵最小的变量
             for mv in min_var_list:
                 label_list.append(mv[0])
-        #Otherwise mark all the variables passed in
+        # Otherwise mark all the variables passed in
         else:
             label_list = var_id_list
         for var_index in label_list:
-            self.variables[var_index]['probability'] = self.variables[var_index]['inferenced_probability']
+            if mlist is not None:
+                mlist.remove(var_index)
+            self.variables[var_index]['probability'] = self.variables[var_index][probability_indicator]
             self.variables[var_index]['label'] = 1 if self.variables[var_index]['probability'] >= 0.5 else 0
             self.variables[var_index]['is_evidence'] = True
-            logging.info('var-' + str(var_index) + " labeled succeed--------------------------------------")
             self.poential_variables_set.remove(var_index)
             self.observed_variables_set.add(var_index)
             self.labeled_variables_set.add(var_index)
@@ -294,8 +303,8 @@ class GML:
                 with open(self.result, 'a') as f:
                     f.write(f'{var_index:7} {probability:10} {label:4} {true_label:4}')
                     f.write('\n')
-        return label_list
-
+        gml_utils.update_evidence(self.variables, self.features, label_list, self.evidence_interval)
+        return len(label_list)
 
     def inference(self):
         '''
@@ -311,33 +320,13 @@ class GML:
             update_cache = int(self.update_proportion * len(self.poential_variables_set))  # Evidential support needs to be recalculated every time update_cache variables are inferred
         self.evidential_support(self.poential_variables_set, self.all_feature_set)
         self.approximate_probability_estimation(self.poential_variables_set)
-        # If the entropy is less than a certain threshold, mark it directly without reasoning
-        if self.optimization_threshold >=0 and self.optimization_threshold <1:
-            for vid in self.poential_variables_set:
-                if self.variables[vid]['entropy'] <= self.optimization_threshold:
-                    self.variables[vid]['probability'] = self.variables[vid]['approximate_probability']
-                    self.variables[vid]['is_evidence'] = True
-                    self.variables[vid]['label'] = 1 if  self.variables[vid]['probability'] >= 0.5 else 0
-                    gml_utils.update_evidence(self.variables, self.features, [vid], self.evidence_interval)
-                    logging.info('var-'+str(vid)+' labeled succeed---------------------------------------------')
-                    probability = self.variables[vid]['probability']
-                    label = self.variables[vid]['label']
-                    true_label = self.variables[vid]['true_label']
-                    if self.out:
-                        with open(self.result, 'a') as f:
-                            f.write(f'{vid:7} {probability:10} {label:4} {true_label:4}')
-                            f.write('\n')
-                    self.labeled_variables_set.add(vid)
-            self.observed_variables_set, self.poential_variables_set = gml_utils.separate_variables(self.variables)
-            self.evidential_support(self.poential_variables_set, self.all_feature_set)
-            self.approximate_probability_estimation(self.poential_variables_set)
+        m_list = self.select_top_m_by_es(self.top_m)
         while len(self.poential_variables_set) > 0:
+            if len(m_list) == 0:
+                m_list = self.select_top_m_by_es(self.top_m)
             # update_proportion is less than or equal to 0, which means that every time the variable is marked, the emergency_support needs to be updated.
-            if self.update_proportion <= 0:
-                self.evidential_support(self.poential_variables_set, self.all_feature_set)
-                self.approximate_probability_estimation(self.poential_variables_set)
-            if  self.update_proportion > 0 and labeled_var == update_cache:
-                #When the number of marked variables reaches update_cache, re-regression and calculate the emergency support
+            if self.update_proportion > 0 and labeled_var >= update_cache:
+                # When the number of marked variables reaches update_cache, re-regression and calculate the emergency support
                 for var_id in self.labeled_variables_set:
                     for feature_id in self.variables[var_id]['feature_set'].keys():
                         update_feature_set.add(feature_id)
@@ -347,15 +336,30 @@ class GML:
                 update_feature_set.clear()
                 self.labeled_variables_set.clear()
                 inferenced_variables_id.clear()
-            m_list = self.select_top_m_by_es(self.top_m)
+                m_list = self.select_top_m_by_es(self.top_m)
             k_list = self.select_top_k_by_entropy(m_list, self.top_k)
-            add_list = [x for x in k_list if x not in inferenced_variables_id]  #Added variables in each round of reasoning
-            if len(add_list) > 0:
+            approx_list = []
+            add_list = [x for x in k_list if
+                        x not in inferenced_variables_id]  # Added variables in each round of reasoning
+            if len(k_list) > 0:
                 if (self.nprocess == 1):
-                    for var_id in add_list:
-                        self.inference_subgraph(var_id)
-                        # For the variables that have been inferred during each round of update, because the parameters are not updated, there is no need for inference.
-                        inferenced_variables_id.add(var_id)
+                    for var_id in k_list:
+                        # If the entropy is less than a certain threshold, mark it directly without reasoning
+                        if self.optimization_threshold == -2 or self.optimization_threshold >= 0 and \
+                                self.variables[var_id]['entropy'] <= self.optimization_threshold:
+                            approx_list.append(var_id)
+                    #  把近似标的变量放入approx_list 然后交给label()函数
+                    if len(approx_list) > 0:
+                        len_label_list = self.label(approx_list, isapprox=True, mlist=m_list)  # edit at 2021-4-22
+                        k_list.clear()
+                        labeled_var += len_label_list
+                        labeled_count += len_label_list
+                    else:
+                        for var_id in k_list:
+                            if var_id in add_list:
+                                self.inference_subgraph(int(var_id))
+                                # For the variables that have been inferred during each round of update, because the parameters are not updated, there is no need for inference.
+                                inferenced_variables_id.add(var_id)
                 else:
                     futures = []
                     for var_id in add_list:
@@ -364,13 +368,13 @@ class GML:
                         inferenced_variables_id.add(var_id)
                     for ft in futures:
                         self.variables[ft.result()[0]]['inferenced_probability'] = ft.result()[1]
-            label_list = self.label(k_list)
-            gml_utils.update_evidence(self.variables, self.features, label_list, self.evidence_interval)
-            gml_utils.update_bound(self.variables,self.features,label_list)  #Update the upper and lower bounds after each variable is marked
-            labeled_var += len(label_list)
-            labeled_count += len(label_list)
+            len_label_list = self.label(k_list, isapprox=False, mlist=m_list)
+
+            # gml_utils.update_bound(self.variables,self.features,label_list)  #Update the upper and lower bounds after each variable is marked
+            labeled_var += len_label_list
+            labeled_count += len_label_list
             logging.info("label_count=" + str(labeled_count))
-        #output results
+            # output results
         self.save_results()
         self.score()
 
