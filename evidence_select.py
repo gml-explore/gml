@@ -78,10 +78,10 @@ class EvidenceSelect:
                                         connected_feature_set.add(feature_id)
                                         connected_edge_set.add((feature_id, id))   #[feature_id,(id1,id2)]
                                         connected_var_set.add(another_var_id)
-                                        if tmp_dict.has_key((var_id,varid)):
+                                        if (var_id,varid) in tmp_dict:
                                             tmp_feature =tmp_dict[(var_id,varid)]
                                             connected_edge_set.add((tmp_feature,(var_id,varid)))
-                                        elif tmp_dict.has_key((varid,var_id)):
+                                        elif (varid,var_id) in tmp_dict:
                                             tmp_feature = tmp_dict[(varid,var_id)]
                                             connected_edge_set.add((tmp_feature, (varid, var_id)))
                                     elif self.variables[another_var_id]['is_evidence'] == False:
